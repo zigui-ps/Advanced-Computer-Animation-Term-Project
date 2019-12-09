@@ -1,5 +1,11 @@
 # Advanced-Computer-Animation-Term-Project
 
+## How to Build
+
+- ```git clone --recurse-submodules https://github.com/zigui-ps/Advanced-Computer-Animation-Term-Project.git```
+- ```mkdir build && cd build```
+- ```cmake .. && make```
+
 ## 구현
 
 - 번지점프대 구현, 자유낙하 구현
