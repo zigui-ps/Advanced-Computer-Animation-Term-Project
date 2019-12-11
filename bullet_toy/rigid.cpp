@@ -8,7 +8,10 @@
 
 #include "LinearMath/btVector3.h"
 
-// #include "bvh.h"
+#include "bulletHelper.h"
+#include "CollisionObject.h"
+
+#include "bvh.h"
 
 class DebugDrawer : public btIDebugDraw
 {
@@ -69,85 +72,13 @@ void  DebugDrawer::setDebugMode(int debugMode)
 
 DebugDrawer* debugDrawer = new DebugDrawer();
 GLfloat light_diffuse[] = {1.0, 0.0, 0.0, 1.0};  /* Red diffuse light. */
-GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};  /* Infinite light location. */
+GLfloat light_position[] = {1.0, 1.0, -1.0, 0.0};  /* Infinite light location. */
 
-btDiscreteDynamicsWorld* g_dynamicsWorld;
-btRigidBody *box1, *box2;
+CollisionObject *box1;
+btRigidBody *box2;
 
-void draw_box(const btVector3& point_enter, const btVector3& half_size){
-	float width = half_size.getX();
-	float height = half_size.getY();
-	float depth = half_size.getZ();
+Bvh bvh;
 
-	glBegin(GL_TRIANGLES);
-	glColor3f(0,0,0);
-
-	// Top
-	glNormal3f(0,1,0);
-	glVertex3f(width, height, depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(-width, height, depth);
-
-	glVertex3f(width, height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(-width, height, -depth);
-
-	glNormal3f(0,0,-1);
-	glVertex3f(-width, -height, depth);
-	glVertex3f(-width, height, depth);
-	glVertex3f(width, -height, depth);
-	
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, depth);
-	glVertex3f(-width, height, depth);
-
-	glNormal3f(1,0,0);
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, -height, -depth);
-
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, height, depth);
-
-	// Bottom
-	glNormal3f(0,-1,0);
-	glVertex3f(width, -height, depth);
-	glVertex3f(-width, -height, -depth);
-	glVertex3f(-width, -height, depth);
-
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, -height, -depth);
-	glVertex3f(-width, -height, -depth);
-
-	glNormal3f(0,0,1);	
-	glVertex3f(-width, -height, -depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(width, -height, -depth);
-	
-	glVertex3f(width, -height, -depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(-width, height, -depth);
-
-	glNormal3f(-1,0,0);
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, -height, -depth);
-
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, -height, -depth);
-
-	glNormal3f(-1,0,0);
-	glVertex3f(-width, -height, depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(-width, -height, -depth);
-
-	glVertex3f(-width, -height, depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(-width, height, depth);
-	glEnd();
-}
 
 void display(void)
 {
@@ -157,10 +88,10 @@ void display(void)
 
 	// g_dynamicsWorld->stepSimulation(1.f/ 60.f, 10);
 	//Debug
-	g_dynamicsWorld->debugDrawWorld();
-	for(int i=g_dynamicsWorld->getNumCollisionObjects() -1; i>=0;i--){
-		btCollisionObject* obj = g_dynamicsWorld->getCollisionObjectArray()[i];
-		btRigidBody* body = btRigidBody::upcast(obj);
+	//g_dynamicsWorld->debugDrawWorld();
+	//for(int i=g_dynamicsWorld->getNumCollisionObjects() -1; i>=0;i--){
+		//btCollisionObject* obj = g_dynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = box2;
 		btTransform trans;
 
 		// For Test
@@ -174,13 +105,13 @@ void display(void)
 			body->activate();
 		} // */
 
-		trans = obj->getWorldTransform();
+		trans = body->getWorldTransform();
 
 		float trans_x = float(trans.getOrigin().getX());
 		float trans_y = float(trans.getOrigin().getY());
 		float trans_z = float(trans.getOrigin().getZ());
 
-		printf("world pos object %d = %f,%f,%f\n", i, trans_x, trans_y, trans_z);
+		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
@@ -188,9 +119,11 @@ void display(void)
 		trans.getOpenGLMatrix(m);
 		glMultMatrixd(m);
 
-		draw_box(trans.getOrigin(), btVector3(5,5,5));
+		draw_box(btVector3(5,5,5));
 		glPopMatrix();
-	}
+	//}
+
+	bvh.draw_bvh(0);
 
 	glutSwapBuffers();
 }
@@ -202,7 +135,7 @@ void nextTimestep(int time){
 	btTransform t;
 	t.setIdentity();
 	t.setOrigin(btVector3(((float)rand()/RAND_MAX) * 20, 0, 0));
-	box1->setWorldTransform(t);
+	//box1->setTransform(t);
 	
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
 	
@@ -226,10 +159,10 @@ void init_gl(int argc, char* argv[]){
     glEnable(GL_DEPTH_TEST);
 
 	glMatrixMode(GL_PROJECTION);
-	gluPerspective(40.0, 1.0, 1.0, 100.0);
+	gluPerspective(40.0, 1.0, 1.0, 1000.0);
 
 	glMatrixMode(GL_MODELVIEW);
-	gluLookAt(50.0, 50.0, 50.0,   /* eye is at () */
+	gluLookAt(0.0, -70.0, 150.0,   /* eye is at () */
 			0.0, 0.0, 0.0,      /* center is at (0,0,0) */
 			0.0, 1.0, 0.);      /* up is in positive Y direction */
 
@@ -247,26 +180,6 @@ void init_bullet_world(){
     g_dynamicsWorld->setGravity(btVector3(0,-10,0));
 
     printf("Init bullet world\n");
-}
-
-btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, bool isKinematics = false, const btVector4& color = btVector4(1, 0, 0, 1)){
-	//rigidbody is dynamic if and only if mass is non zero, otherwise static
-		bool isDynamic = (mass != 0.f);
-
-		btVector3 localInertia(0, 0, 0);
-		if (isDynamic)
-			shape->calculateLocalInertia(mass, localInertia);
-		
-		btRigidBody* body = new btRigidBody(mass, 0, shape, localInertia);
-		body->setWorldTransform(startTransform);
-
-		body->setUserIndex(-1);
-		if(isKinematics){
-			body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-			body->setActivationState( DISABLE_DEACTIVATION );
-		}
-		g_dynamicsWorld->addRigidBody(body);
-		return body;
 }
 
 int main(int argc, char* argv[]){
@@ -291,28 +204,33 @@ int main(int argc, char* argv[]){
 		createRigidBody(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
 	}
 
+	// {
+	// 	// btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
+		
+	// 	// btTransform startTransform;
+	// 	// startTransform.setIdentity();
+
+	// 	// btScalar mass(5.f);
+		
+	// 	// startTransform.setOrigin(btVector3(0,10,0));
+	// 	// box1 = createRigidBody(mass, startTransform, box, true);
+
+	// 	box1 = new CollisionObject();
+	// 	box1->createCollisionObject(0,10,0, 5,5,5);
+	// }
 	{
 		btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
 		
 		btTransform startTransform;
 		startTransform.setIdentity();
 
-		btScalar mass(5.f);
-		
-		startTransform.setOrigin(btVector3(0,10,0));
-		box1 = createRigidBody(mass, startTransform, box, true);
-	}
-	{
-		btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
-		
-		btTransform startTransform;
-		startTransform.setIdentity();
-
-		btScalar mass(5.f);
+		btScalar mass(0.001f);
 		
 		startTransform.setOrigin(btVector3(5,25,0));
 		box2 = createRigidBody(mass, startTransform, box);
 	}
+
+	bvh.load("../../vsctut/bvh/16_01_jump.bvh");
 
     glutMainLoop();
 
