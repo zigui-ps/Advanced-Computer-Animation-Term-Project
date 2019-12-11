@@ -8,6 +8,8 @@
 
 #include "LinearMath/btVector3.h"
 
+#include "bvh.h"
+
 class DebugDrawer : public btIDebugDraw
 {
 	int m_debugMode;
@@ -160,6 +162,16 @@ void display(void)
 		btRigidBody* body = btRigidBody::upcast(obj);
 		btTransform trans;
 
+		// For Test
+		if(i == 2){
+			btTransform t;
+			t.setOrigin(btVector3(((float)rand()/RAND_MAX)*5, 0, 0));
+
+			body->setWorldTransform(t);
+			body->applyCentralForce(btVector3(((float)rand()/RAND_MAX)*5, 0, 0));
+			body->activate();
+		}
+
 		trans = obj->getWorldTransform();
 
 		float trans_x = float(trans.getOrigin().getX());
@@ -167,7 +179,6 @@ void display(void)
 		float trans_z = float(trans.getOrigin().getZ());
 
 		printf("world pos object %d = %f,%f,%f\n", i, trans_x, trans_y, trans_z);
-
 
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
@@ -248,7 +259,9 @@ int main(int argc, char* argv[]){
 
     init_bullet_world();
 	
-	//		m_dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
+	// Load BVH
+	Bvh bvh;
+	bvh.load("../vsctut/bvh/16_01_jump.bvh");
 
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
@@ -271,7 +284,7 @@ int main(int argc, char* argv[]){
 
 		btScalar mass(5.f);
 		
-		startTransform.setOrigin(btVector3(0,50,0));
+		startTransform.setOrigin(btVector3(0,10,0));
 		createRigidBody(mass, startTransform, box);
 	}
 	{
@@ -282,7 +295,7 @@ int main(int argc, char* argv[]){
 
 		btScalar mass(5.f);
 		
-		startTransform.setOrigin(btVector3(5,70,0));
+		startTransform.setOrigin(btVector3(5,15,0));
 		createRigidBody(mass, startTransform, box);
 	}
 
