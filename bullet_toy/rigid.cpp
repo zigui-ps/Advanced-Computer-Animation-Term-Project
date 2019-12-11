@@ -8,7 +8,7 @@
 
 #include "LinearMath/btVector3.h"
 
-#include "bvh.h"
+// #include "bvh.h"
 
 class DebugDrawer : public btIDebugDraw
 {
@@ -72,6 +72,7 @@ GLfloat light_diffuse[] = {1.0, 0.0, 0.0, 1.0};  /* Red diffuse light. */
 GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};  /* Infinite light location. */
 
 btDiscreteDynamicsWorld* g_dynamicsWorld;
+btRigidBody *box1, *box2;
 
 void draw_box(const btVector3& point_enter, const btVector3& half_size){
 	float width = half_size.getX();
@@ -154,7 +155,7 @@ void display(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 
-	g_dynamicsWorld->stepSimulation(1.f/ 60.f, 10);
+	// g_dynamicsWorld->stepSimulation(1.f/ 60.f, 10);
 	//Debug
 	g_dynamicsWorld->debugDrawWorld();
 	for(int i=g_dynamicsWorld->getNumCollisionObjects() -1; i>=0;i--){
@@ -163,6 +164,7 @@ void display(void)
 		btTransform trans;
 
 		// For Test
+		/*
 		if(i == 2){
 			btTransform t;
 			t.setOrigin(btVector3(((float)rand()/RAND_MAX)*5, 0, 0));
@@ -170,7 +172,7 @@ void display(void)
 			body->setWorldTransform(t);
 			body->applyCentralForce(btVector3(((float)rand()/RAND_MAX)*5, 0, 0));
 			body->activate();
-		}
+		} // */
 
 		trans = obj->getWorldTransform();
 
@@ -182,7 +184,9 @@ void display(void)
 
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
-		glTranslatef(trans_x, trans_y, trans_z);
+		double m[16];
+		trans.getOpenGLMatrix(m);
+		glMultMatrixd(m);
 
 		draw_box(trans.getOrigin(), btVector3(5,5,5));
 		glPopMatrix();
@@ -194,7 +198,14 @@ void display(void)
 void nextTimestep(int time){
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 	float internalTimeStep = 1. / 240.f, deltaTime = 1. / 60.f;
-	//m_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
+	
+	btTransform t;
+	t.setIdentity();
+	t.setOrigin(btVector3(((float)rand()/RAND_MAX) * 20, 0, 0));
+	box1->setWorldTransform(t);
+	
+	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
+	
 	glutPostRedisplay();
 }
 
@@ -238,7 +249,7 @@ void init_bullet_world(){
     printf("Init bullet world\n");
 }
 
-btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, const btVector4& color = btVector4(1, 0, 0, 1)){
+btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, bool isKinematics = false, const btVector4& color = btVector4(1, 0, 0, 1)){
 	//rigidbody is dynamic if and only if mass is non zero, otherwise static
 		bool isDynamic = (mass != 0.f);
 
@@ -250,6 +261,10 @@ btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCo
 		body->setWorldTransform(startTransform);
 
 		body->setUserIndex(-1);
+		if(isKinematics){
+			body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+			body->setActivationState( DISABLE_DEACTIVATION );
+		}
 		g_dynamicsWorld->addRigidBody(body);
 		return body;
 }
@@ -260,8 +275,8 @@ int main(int argc, char* argv[]){
     init_bullet_world();
 	
 	// Load BVH
-	Bvh bvh;
-	bvh.load("../vsctut/bvh/16_01_jump.bvh");
+//	Bvh bvh;
+//	bvh.load("../vsctut/bvh/16_01_jump.bvh");
 
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
@@ -277,7 +292,7 @@ int main(int argc, char* argv[]){
 	}
 
 	{
-		btBoxShape* box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
+		btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
 		
 		btTransform startTransform;
 		startTransform.setIdentity();
@@ -285,18 +300,18 @@ int main(int argc, char* argv[]){
 		btScalar mass(5.f);
 		
 		startTransform.setOrigin(btVector3(0,10,0));
-		createRigidBody(mass, startTransform, box);
+		box1 = createRigidBody(mass, startTransform, box, true);
 	}
 	{
-		btBoxShape* box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
+		btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
 		
 		btTransform startTransform;
 		startTransform.setIdentity();
 
 		btScalar mass(5.f);
 		
-		startTransform.setOrigin(btVector3(5,15,0));
-		createRigidBody(mass, startTransform, box);
+		startTransform.setOrigin(btVector3(5,25,0));
+		box2 = createRigidBody(mass, startTransform, box);
 	}
 
     glutMainLoop();
