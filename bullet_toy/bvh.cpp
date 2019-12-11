@@ -59,7 +59,7 @@ void Bvh::load(const std::string& filename)
     }
 
     // Create Collision body
-    //rootJoint->create_link();
+    rootJoint->create_link();
 }
 void Bvh::loadHierarchy(std::istream& stream)
 {
@@ -246,14 +246,47 @@ void JOINT::draw_joint(int frame_starts_index, MOTION* motion){
     if( this->parent != NULL )
         this->matrix = this->parent->matrix * this->matrix;
     
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glMultMatrixf((float*)glm::value_ptr(this->matrix));
-    //Draw sth
-    // this->setTransform((double*)glm::value_ptr(this->matrix));
-    // this->draw();
-    draw_box(btVector3(5, 5, 5));
-    glPopMatrix();
+    if(this->parent !=NULL){
+        glm::mat4 trans = this->parent->matrix;
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+
+        // For Debug
+        glPushMatrix();
+        glMultMatrixf((float*)glm::value_ptr(trans));
+        glMultMatrixf((float*)glm::value_ptr(glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f))));
+        draw_axes();
+        glPopMatrix();
+
+        //Draw sth
+        // this->setTransform((double*)glm::value_ptr(this->matrix));
+        // this->draw();
+
+        // Link
+
+        trans = glm::translate(trans, glm::vec3(this->offset.x/2, this->offset.y/2, this->offset.z/2));
+
+        glMultMatrixf((float*)glm::value_ptr(trans));
+
+        if(this->offset.x/2 != 0){
+            //this->setSize(this->offset.x/2, 2, 2);
+            this->setTransform((float*)glm::value_ptr(trans));
+            this->draw();
+            //draw_box(btVector3(this->offset.x/2, 2, 2));
+        } else if(this->offset.y/2 != 0){
+            //this->setSize(2, this->offset.y/2, 2);
+            this->setTransform((float*)glm::value_ptr(trans));
+            this->draw();
+            //draw_box(btVector3(2, this->offset.y/2, 2));
+        } else if(this->offset.z/2 != 0){
+            //this->setSize(2, 2, this->offset.z/2);
+            this->setTransform((float*)glm::value_ptr(trans));
+            this->draw();
+            //draw_box(btVector3(2, 2, this->offset.z/2));
+        }
+        glPopMatrix();
+    }
 
     for(auto& child : this->children)
         child->draw_joint(frame_starts_index, motion);
@@ -266,7 +299,17 @@ void JOINT::draw_joint(int frame_starts_index, MOTION* motion){
 void JOINT::create_link(){
     printf("creating...\n");
     if(this->parent){
-        this->createCollisionObject(0,0,0,5,5,5);
+        //glm::vec4 parent_world_pos = this->parent->matrix 
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(glm::mat4(1.0f), glm::vec3(this->offset.x/2, this->offset.y/2, this->offset.z/2));
+
+        if(this->offset.x/2 != 0){
+            this->createCollisionObject((float*)glm::value_ptr(trans),this->offset.x/2, 2, 2);
+        } else if(this->offset.y/2 != 0){
+            this->createCollisionObject((float*)glm::value_ptr(trans), 2, this->offset.y/2, 2);
+        } else if(this->offset.z/2 != 0){
+            this->createCollisionObject((float*)glm::value_ptr(trans), 2, 2, this->offset.z/2);
+        }
     }
 
     for(auto& child : this->children)

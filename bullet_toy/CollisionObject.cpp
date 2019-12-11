@@ -19,9 +19,34 @@ void CollisionObject::createCollisionObject(float world_x, float world_y, float 
     printf("created\n");
 }
 
+void CollisionObject::createCollisionObject(float *m, float half_width, float half_height, float half_depth){
+    setSize(half_width, half_height, half_depth);
+    btBoxShape *box = new btBoxShape(btVector3(btScalar(half_width), btScalar(half_height), btScalar(half_depth)));
+    
+    // Double conversion
+    double dm[16] = {0.0};
+    for(int i=0;i<16;i++){
+        dm[i] = m[i];
+    }
+    m_trans.setFromOpenGLMatrix(dm);
+    printf("pos object  = %f,%f,%f\n", m_trans.getOrigin().getX(), m_trans.getOrigin().getY(), m_trans.getOrigin().getZ());
 
-void CollisionObject::setTransform(double* m){
-    m_trans.setFromOpenGLMatrix(m);
+    m_mass = 5.f;
+    
+    m_obj = createRigidBody(m_mass, m_trans, box, true);
+	m_obj->setWorldTransform(m_trans);
+
+    printf("created\n");
+}
+
+
+void CollisionObject::setTransform(float* m){
+    // Double conversion
+    double dm[16] = {0.0};
+    for(int i=0;i<16;i++){
+        dm[i] = m[i];
+    }
+    m_trans.setFromOpenGLMatrix(dm);
 
     if(m_obj) m_obj->setWorldTransform(m_trans);
 }

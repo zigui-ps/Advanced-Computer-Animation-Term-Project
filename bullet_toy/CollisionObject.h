@@ -8,7 +8,8 @@ public:
     CollisionObject();
 
     void createCollisionObject(float world_x, float world_y, float world_z, float half_width, float half_height, float half_depth);
-    void setTransform(double* m);
+    void createCollisionObject(float *m, float half_width, float half_height, float half_depth);
+    void setTransform(float* m);
     void setTransform(btTransform m);
     void setSize(float half_width, float half_height, float half_depth);
     void draw();

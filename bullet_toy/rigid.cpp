@@ -79,7 +79,7 @@ btRigidBody *box2;
 
 Bvh bvh;
 
-
+int cnt=0;
 void display(void)
 {
 	glClearColor(0.9, 0.9, 0.9, 1);
@@ -88,7 +88,7 @@ void display(void)
 
 	// g_dynamicsWorld->stepSimulation(1.f/ 60.f, 10);
 	//Debug
-	//g_dynamicsWorld->debugDrawWorld();
+	g_dynamicsWorld->debugDrawWorld();
 	//for(int i=g_dynamicsWorld->getNumCollisionObjects() -1; i>=0;i--){
 		//btCollisionObject* obj = g_dynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = box2;
@@ -123,7 +123,8 @@ void display(void)
 		glPopMatrix();
 	//}
 
-	bvh.draw_bvh(0);
+	if(cnt>=bvh.motionData.num_frames) cnt =0;
+	bvh.draw_bvh(cnt++);
 
 	glutSwapBuffers();
 }
@@ -162,8 +163,8 @@ void init_gl(int argc, char* argv[]){
 	gluPerspective(40.0, 1.0, 1.0, 1000.0);
 
 	glMatrixMode(GL_MODELVIEW);
-	gluLookAt(0.0, -70.0, 150.0,   /* eye is at () */
-			0.0, 0.0, 0.0,      /* center is at (0,0,0) */
+	gluLookAt(250.0, -70.0, 150.0,   /* eye is at () */
+			0.0, 20.0, -95.0,      /* center is at (0,0,0) */
 			0.0, 1.0, 0.);      /* up is in positive Y direction */
 
     printf("Init GL\n");

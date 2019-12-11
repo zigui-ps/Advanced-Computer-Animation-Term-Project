@@ -14,10 +14,10 @@ btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCo
 		body->setWorldTransform(startTransform);
 
 		body->setUserIndex(-1);
-		// if(isKinematics){
-		// 	body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-		// 	body->setActivationState( DISABLE_DEACTIVATION );
-		// }
+		if(isKinematics){
+			body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+			body->setActivationState( DISABLE_DEACTIVATION );
+		}
 		g_dynamicsWorld->addRigidBody(body);
 		return body;
 }
@@ -94,5 +94,22 @@ void draw_box(const btVector3& half_size){
 	glVertex3f(-width, -height, depth);
 	glVertex3f(-width, height, -depth);
 	glVertex3f(-width, height, depth);
+	glEnd();
+}
+
+void draw_axes(){
+	glBegin(GL_LINES);
+	// draw line for x axis
+	glColor3f(1.0, 0.0, 0.0);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(1.0, 0.0, 0.0);
+	// draw line for y axis
+	glColor3f(0.0, 1.0, 0.0);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(0.0, 1.0, 0.0);
+	// draw line for Z axis
+	glColor3f(0.0, 0.0, 1.0);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(0.0, 0.0, 1.0);
 	glEnd();
 }
