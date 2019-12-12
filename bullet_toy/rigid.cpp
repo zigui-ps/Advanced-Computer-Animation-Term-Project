@@ -126,6 +126,12 @@ void display(void)
 	skel->display();
 	printf("%lf %lf %lf\n", skel->location[0], skel->location[1], skel->location[2]);
 
+	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
+	{
+		btSoftBody* psb = (btSoftBody*)g_dynamicsWorld->getSoftBodyArray()[i];
+		draw_soft_body(psb);
+	}
+
 	glutSwapBuffers();
 }
 
@@ -249,8 +255,6 @@ int main(int argc, char* argv[]){
 
 		startTransform.setOrigin(btVector3(-400,50,50));
 		box2 = create_rigid_body(mass, startTransform, box);
-	
-
 		psb->appendDeformableAnchor(psb->m_nodes.size() - 1, box2);
 
 		box2->setLinearVelocity(btVector3(0, 20, 0));
