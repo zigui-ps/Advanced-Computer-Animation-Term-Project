@@ -2,16 +2,19 @@
 #include "openglHelper.h"
 #include <map>
 
-btDiscreteDynamicsWorld* g_dynamicsWorld;
+btDeformableMultiBodyDynamicsWorld* g_dynamicsWorld;
 
 void init_bullet_world(){
-    btBroadphaseInterface* broadphase = new btDbvtBroadphase();
-    btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
-    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
+    auto m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
+	auto m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
+	auto m_broadphase = new btDbvtBroadphase();
+	btDeformableBodySolver* deformableBodySolver = new btDeformableBodySolver();
+	btDeformableMultiBodyConstraintSolver* sol = new btDeformableMultiBodyConstraintSolver();
+	sol->setDeformableSolver(deformableBodySolver);
+	auto m_solver = sol;
 
-    btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
+	g_dynamicsWorld = new btDeformableMultiBodyDynamicsWorld(m_dispatcher, m_broadphase, sol, m_collisionConfiguration, deformableBodySolver);
 
-    g_dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
     g_dynamicsWorld->setGravity(btVector3(0,-10,0));
 
     printf("Init bullet world\n");

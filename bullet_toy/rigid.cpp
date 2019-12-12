@@ -75,8 +75,8 @@ DebugDrawer* debugDrawer = new DebugDrawer();
 GLfloat light_diffuse[] = {1.0, 0.0, 0.0, 1.0};  /* Red diffuse light. */
 GLfloat light_position[] = {1.0, 1.0, -1.0, 0.0};  /* Infinite light location. */
 
-CollisionObject *box1;
 btRigidBody *box2;
+btSoftBody *rope;
 
 Bvh bvh;
 
@@ -121,6 +121,12 @@ void display(void)
 	// Bvh simulation
 	if(cnt>=bvh.motionData.num_frames) cnt =0;
 	bvh.draw_bvh(cnt++);
+
+	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
+	{
+		btSoftBody* psb = (btSoftBody*)g_dynamicsWorld->getSoftBodyArray()[i];
+		draw_soft_body(psb);
+	}
 
 	glutSwapBuffers();
 }
@@ -217,15 +223,39 @@ int main(int argc, char* argv[]){
 	// 	box1->createCollisionObject(0,10,0, 5,5,5);
 	// }
 	{
+		btSoftBody* psb = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(-500, 55, 50), btVector3(-400, 55, 50),10, 1);
+		psb->getCollisionShape()->setMargin(0.1);
+		psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
+		psb->m_cfg.kCHR = 1; // collision hardness with rigid body
+		psb->m_cfg.kDF = 2;
+		psb->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+
+		psb->m_materials[0]->m_kLST = 0;
+		
+		psb->setTotalMass(5.f);
+		g_dynamicsWorld->addSoftBody(psb);
+
+		btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
+		g_dynamicsWorld->addForce(psb, mass_spring);
+
+		btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
+		g_dynamicsWorld->addForce(psb, gravity_force);
+	
 		btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
 
 		btTransform startTransform;
 		startTransform.setIdentity();
 
-		btScalar mass(0.001f);
+		btScalar mass(10.0f);
 
-		startTransform.setOrigin(btVector3(5,25,0));
+		startTransform.setOrigin(btVector3(-400,50,50));
 		box2 = create_rigid_body(mass, startTransform, box);
+	
+
+		psb->appendDeformableAnchor(psb->m_nodes.size() - 1, box2);
+
+		box2->setLinearVelocity(btVector3(0, 20, 0));
+		box2->setAngularVelocity(btVector3(10, 0, 0));
 	}
 
 	// Load BVH
