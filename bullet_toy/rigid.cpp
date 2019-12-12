@@ -230,6 +230,7 @@ int main(int argc, char* argv[]){
 
 	// Load BVH
 	bvh.load("../../vsctut/bvh/16_15_walk.bvh");
+	//bvh.load("../../vsctut/bvh/superman_pose.bvh");
 
 	glutMainLoop();
 

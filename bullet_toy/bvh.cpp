@@ -280,11 +280,11 @@ void JOINT::create_link(){
         glm::mat4 trans = glm::mat4(1.0f);
         trans = glm::translate(glm::mat4(1.0f), glm::vec3(this->offset.x/2, this->offset.y/2, this->offset.z/2));
 
-        if(this->offset.x/2 != 0){
+        if(fabs(this->offset.x/2) > 1e-4){
             this->createCollisionObject((float*)glm::value_ptr(trans),this->offset.x/2, 2, 2);
-        } else if(this->offset.y/2 != 0){
+        } else if(fabs(this->offset.y/2) > 1e-4){
             this->createCollisionObject((float*)glm::value_ptr(trans), 2, this->offset.y/2, 2);
-        } else if(this->offset.z/2 != 0){
+        } else if(fabs(this->offset.z/2) > 1e-4){
             this->createCollisionObject((float*)glm::value_ptr(trans), 2, 2, this->offset.z/2);
         }
     }
