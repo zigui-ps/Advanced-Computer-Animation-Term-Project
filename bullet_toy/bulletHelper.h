@@ -9,7 +9,7 @@
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 #include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
 
-extern btDiscreteDynamicsWorld* g_dynamicsWorld;
+extern btDeformableMultiBodyDynamicsWorld* g_dynamicsWorld;
 
 void init_bullet_world();
 btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollisionShape* shape, bool isKinematics = false);

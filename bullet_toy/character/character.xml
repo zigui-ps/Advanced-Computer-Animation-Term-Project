@@ -1,0 +1,70 @@
+<Skeleton name="Humanoid">
+	<Joint name="pelvis">
+		<Sphere radius="0.15" translate="0 0 0"/>
+		<Sphere radius="0.15" translate="0 0.3 0"/>
+		<Joint name="lfemur" translate="0.15 0.0 0.0">
+			<Sphere radius="0.10" translate="0 0 0"/>
+			<Cylinder radius="0.05" height="0.4" translate="0 0 0" rotate="90 1 0 0"/>
+			<Joint name="ltibia" translate="0.0 -0.4 0.0">
+				<Sphere radius="0.05" translate="0 0 0"/>
+				<Cylinder radius="0.05" height="0.5" translate="0 0 0" rotate="90 1 0 0"/>
+				<Joint name="lfoot" translate="0.0 -0.5 0.0">
+					<Cuboid info="0.08 0.08 0.20" translate="-0.04 -0.08 -0.04"/>
+					<Joint name="ltoes" translate="0.0 0.0 0.08">
+						<Cuboid info="0.02 0.02 0.02" translate="-0.01 -0.01 -0.01"/>
+					</Joint>
+				</Joint>
+			</Joint>
+		</Joint>
+		<Joint name="rfemur" translate="-0.15 0.0 0.0">
+			<Sphere radius="0.10" translate="0 0 0"/>
+			<Cylinder radius="0.05" height="0.4" translate="0 0 0" rotate="90 1 0 0"/>
+			<Joint name="rtibia" translate="0.0 -0.4 0.0">
+				<Sphere radius="0.05" translate="0 0 0"/>
+				<Cylinder radius="0.05" height="0.5" translate="0 0 0" rotate="90 1 0 0"/>
+				<Joint name="rfoot" translate="0.0 -0.5 0.0">
+					<Cuboid info="0.08 0.08 0.20" translate="-0.04 -0.08 -0.04"/>
+					<Joint name="rtoes" translate="0.0 0.0 0.08">
+						<Cuboid info="0.02 0.02 0.02" translate="-0.01 -0.01 -0.01"/>
+					</Joint>
+				</Joint>
+			</Joint>
+		</Joint>
+		<Joint name="thorax" translate="0 0.7 0">
+			<Sphere radius="0.2" translate="0 0 0.0"/>
+			<Joint name="Head" translate="0 0.15 0">
+				<Sphere radius="0.08" translate="0 0 0"/>
+				<Sphere radius="0.02" translate="0.04 0.04 0.04"/>
+				<Sphere radius="0.02" translate="-0.04 0.04 0.04"/>
+			</Joint>
+			<Joint name="lclavicle" translate="0.2 0.0 0.0">
+				<Sphere radius="0.10" translate="0 0 0"/>
+				<Joint name="lhumerus" translate="0.2 0.0 0.0">
+					<Sphere radius="0.10" translate="0 0 0"/>
+					<Cylinder radius="0.05" height="0.3" translate="0 0 0" rotate="90 0 1 0"/>
+					<Joint name="lradius" translate="0.3 0.0 0.0">
+						<Sphere radius="0.05" translate="0 0 0"/>
+						<Cylinder radius="0.05" height="0.3" translate="0 0 0" rotate="90 0 1 0"/>
+						<Joint name="lhand" translate="0.3 0.0 0.0">
+							<Cuboid info="0.12 0.04 0.08" translate="0 -0.02 -0.04"/>
+						</Joint>
+					</Joint>
+				</Joint>
+			</Joint>
+			<Joint name="ArmR" translate="-0.2 0.0 0.0">
+				<Sphere radius="0.10" translate="0 0 0"/>
+				<Cylinder radius="0.05" height="0.3" translate="-0.3 0 0" rotate="90 0 1 0"/>
+				<Joint name="ForeArmR" translate="-0.3 0.0 0.0">
+					<Sphere radius="0.05" translate="0 0 0"/>
+					<Cylinder radius="0.05" height="0.3" translate="-0.3 0 0" rotate="90 0 1 0"/>
+					<Joint name="HandR" translate="-0.3 0.0 0.0">
+						<Cuboid info="0.12 0.04 0.08" translate="-0.12 -0.02 -0.04"/>
+					</Joint>
+				</Joint>
+			</Joint>
+		</Joint>
+	</Joint>
+</Skeleton>
+
+
+

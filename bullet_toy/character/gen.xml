@@ -1,0 +1,74 @@
+<Skeleton name="Humanoid">
+    <Joint name="pelvis">
+        <Sphere radius="0.05" translate="0 0 0" />
+        <Joint name="lfemur" translate="0.11446 0 0 ">
+            <Sphere radius="0.05" translate="0 0 0" />
+            <Joint name="ltibia" translate="0 -0.420304 0 ">
+                <Sphere radius="0.05" translate="0 0 0" />
+                <Joint name="lfoot" translate="0 -0.399302 0 ">
+                    <Sphere radius="0.05" translate="0 0 0" />
+                    <Joint name="ltoes" translate="0 0 0.117758 ">
+                        <Sphere radius="0.05" translate="0 0 0" />
+                        <Joint name="Site" translate="0 0 0.05 ">
+                            <Sphere radius="0.05" translate="0 0 0" />
+                        </Joint>
+                    </Joint>
+                </Joint>
+            </Joint>
+        </Joint>
+        <Joint name="rfemur" translate="-0.11446 0 0 ">
+            <Sphere radius="0.05" translate="0 0 0" />
+            <Joint name="rtibia" translate="0 -0.420304 0 ">
+                <Sphere radius="0.05" translate="0 0 0" />
+                <Joint name="rfoot" translate="0 -0.399302 0 ">
+                    <Sphere radius="0.05" translate="0 0 0" />
+                    <Joint name="rtoes" translate="0 0 0.117758 ">
+                        <Sphere radius="0.05" translate="0 0 0" />
+                        <Joint name="Site" translate="0 0 0.05 ">
+                            <Sphere radius="0.05" translate="0 0 0" />
+                        </Joint>
+                    </Joint>
+                </Joint>
+            </Joint>
+        </Joint>
+        <Joint name="thorax" translate="0 0.112556 -0.05 ">
+            <Sphere radius="0.05" translate="0 0 0" />
+            <Joint name="head" translate="0 0.437993 0 ">
+                <Sphere radius="0.05" translate="0 0 0" />
+                <Joint name="Site" translate="0 0.05 0 ">
+                    <Sphere radius="0.05" translate="0 0 0" />
+                </Joint>
+            </Joint>
+            <Joint name="lclavicle" translate="0 0.39863 0 ">
+                <Sphere radius="0.05" translate="0 0 0" />
+                <Joint name="lhumerus" translate="0.173806 0.049583 0 ">
+                    <Sphere radius="0.05" translate="0 0 0" />
+                    <Joint name="lradius" translate="0 -0.275613 0 ">
+                        <Sphere radius="0.05" translate="0 0 0" />
+                        <Joint name="lhand" translate="0 -0.26933 0 ">
+                            <Sphere radius="0.05" translate="0 0 0" />
+                            <Joint name="Site" translate="0 -0.05 0 ">
+                                <Sphere radius="0.05" translate="0 0 0" />
+                            </Joint>
+                        </Joint>
+                    </Joint>
+                </Joint>
+            </Joint>
+            <Joint name="rclavicle" translate="0 0.39863 0 ">
+                <Sphere radius="0.05" translate="0 0 0" />
+                <Joint name="rhumerus" translate="-0.173806 0.049583 0 ">
+                    <Sphere radius="0.05" translate="0 0 0" />
+                    <Joint name="rradius" translate="0 -0.275613 0 ">
+                        <Sphere radius="0.05" translate="0 0 0" />
+                        <Joint name="rhand" translate="0 -0.26933 0 ">
+                            <Sphere radius="0.05" translate="0 0 0" />
+                            <Joint name="Site" translate="0 -0.05 0 ">
+                                <Sphere radius="0.05" translate="0 0 0" />
+                            </Joint>
+                        </Joint>
+                    </Joint>
+                </Joint>
+            </Joint>
+        </Joint>
+    </Joint>
+</Skeleton>

@@ -3,6 +3,7 @@
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <GL/freeglut.h>
 #include <stdio.h> //printf debugging
+#include <tinyxml2.h>
 
 #include "btBulletDynamicsCommon.h"
 
@@ -11,8 +12,9 @@
 #include "bulletHelper.h"
 #include "openglHelper.h"
 #include "CollisionObject.h"
-
-#include "bvh.h"
+#include "Render/Render.h"
+#include "Skeleton/Skeleton.h"
+#include "Motion/MotionGraph.h"
 
 class DebugDrawer : public btIDebugDraw
 {
@@ -59,8 +61,6 @@ void DebugDrawer::draw3dText(const btVector3& location,const char* textString)
 	glRasterPos3f(location.x(),  location.y(),  location.z());
 }
 
-
-
 void DebugDrawer::reportErrorWarning(const char* warningString)
 {
 	printf("%s\n",warningString);
@@ -73,12 +73,12 @@ void  DebugDrawer::setDebugMode(int debugMode)
 
 DebugDrawer* debugDrawer = new DebugDrawer();
 GLfloat light_diffuse[] = {1.0, 0.0, 0.0, 1.0};  /* Red diffuse light. */
-GLfloat light_position[] = {1.0, 1.0, -1.0, 0.0};  /* Infinite light location. */
+GLfloat light_position[] = {10.0, 10.0, -1.0, 0.0};  /* Infinite light location. */
 
-CollisionObject *box1;
 btRigidBody *box2;
-
-Bvh bvh;
+btSoftBody *rope;
+GraphPlayerPtr player;
+SkeletonPtr skel;
 
 int cnt=0;
 void display(void)
@@ -118,9 +118,13 @@ void display(void)
 	draw_box(5,5,5);
 	glPopMatrix();
 
-	// Bvh simulation
-	if(cnt>=bvh.motionData.num_frames) cnt =0;
-	bvh.draw_bvh(cnt++);
+	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
+	{
+		btSoftBody* psb = (btSoftBody*)g_dynamicsWorld->getSoftBodyArray()[i];
+		draw_soft_body(psb);
+	}
+	skel->display();
+	printf("%lf %lf %lf\n", skel->location[0], skel->location[1], skel->location[2]);
 
 	glutSwapBuffers();
 }
@@ -135,6 +139,7 @@ void nextTimestep(int time){
 	//box1->setTransform(t);
 
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
+	player->nextTimestep(time);
 
 	glutPostRedisplay();
 }
@@ -217,21 +222,46 @@ int main(int argc, char* argv[]){
 	// 	box1->createCollisionObject(0,10,0, 5,5,5);
 	// }
 	{
+		btSoftBody* psb = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(-500, 55, 50), btVector3(-400, 55, 50),10, 1);
+		psb->getCollisionShape()->setMargin(0.1);
+		psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
+		psb->m_cfg.kCHR = 1; // collision hardness with rigid body
+		psb->m_cfg.kDF = 2;
+		psb->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+
+		psb->m_materials[0]->m_kLST = 0;
+		
+		psb->setTotalMass(5.f);
+		g_dynamicsWorld->addSoftBody(psb);
+
+		btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
+		g_dynamicsWorld->addForce(psb, mass_spring);
+
+		btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
+		g_dynamicsWorld->addForce(psb, gravity_force);
+	
 		btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
 
 		btTransform startTransform;
 		startTransform.setIdentity();
 
-		btScalar mass(0.001f);
+		btScalar mass(10.0f);
 
-		startTransform.setOrigin(btVector3(5,25,0));
+		startTransform.setOrigin(btVector3(-400,50,50));
 		box2 = create_rigid_body(mass, startTransform, box);
+	
+
+		psb->appendDeformableAnchor(psb->m_nodes.size() - 1, box2);
+
+		box2->setLinearVelocity(btVector3(0, 20, 0));
+		box2->setAngularVelocity(btVector3(10, 0, 0));
 	}
-
-	// Load BVH
-	bvh.load("../../vsctut/bvh/16_15_walk.bvh");
-	//bvh.load("../../vsctut/bvh/superman_pose.bvh");
-
+//*
+	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
+	skel = SkeletonPtr(new Skeleton(doc));
+	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
+	player = GraphPlayerPtr(new GraphPlayer(skel, graph));
+// */
 	glutMainLoop();
 
 	return 0;
