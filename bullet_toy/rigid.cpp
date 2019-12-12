@@ -85,44 +85,31 @@ void display(void)
 	glClearColor(0.9, 0.9, 0.9, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-
-	// g_dynamicsWorld->stepSimulation(1.f/ 60.f, 10);
 	//Debug
 	g_dynamicsWorld->debugDrawWorld();
-	//for(int i=g_dynamicsWorld->getNumCollisionObjects() -1; i>=0;i--){
-		//btCollisionObject* obj = g_dynamicsWorld->getCollisionObjectArray()[i];
-		btRigidBody* body = box2;
-		btTransform trans;
 
-		// For Test
-		/*
-		if(i == 2){
-			btTransform t;
-			t.setOrigin(btVector3(((float)rand()/RAND_MAX)*5, 0, 0));
 
-			body->setWorldTransform(t);
-			body->applyCentralForce(btVector3(((float)rand()/RAND_MAX)*5, 0, 0));
-			body->activate();
-		} // */
+	btRigidBody* body = box2;
+	btTransform trans;
 
-		trans = body->getWorldTransform();
+	trans = body->getWorldTransform();
 
-		float trans_x = float(trans.getOrigin().getX());
-		float trans_y = float(trans.getOrigin().getY());
-		float trans_z = float(trans.getOrigin().getZ());
+	float trans_x = float(trans.getOrigin().getX());
+	float trans_y = float(trans.getOrigin().getY());
+	float trans_z = float(trans.getOrigin().getZ());
 
-		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+	printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		double m[16];
-		trans.getOpenGLMatrix(m);
-		glMultMatrixd(m);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	double m[16];
+	trans.getOpenGLMatrix(m);
+	glMultMatrixd(m);
 
-		draw_box(btVector3(5,5,5));
-		glPopMatrix();
-	//}
+	draw_box(btVector3(5,5,5));
+	glPopMatrix();
 
+	// Bvh simulation
 	if(cnt>=bvh.motionData.num_frames) cnt =0;
 	bvh.draw_bvh(cnt++);
 
@@ -170,39 +157,23 @@ void init_gl(int argc, char* argv[]){
     printf("Init GL\n");
 }
 
-void init_bullet_world(){
-    btBroadphaseInterface* broadphase = new btDbvtBroadphase();
-    btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
-    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
-
-    btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
-
-    g_dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-    g_dynamicsWorld->setGravity(btVector3(0,-10,0));
-
-    printf("Init bullet world\n");
-}
-
 int main(int argc, char* argv[]){
     init_gl(argc, argv);
 
     init_bullet_world();
 	
-	// Load BVH
-//	Bvh bvh;
-//	bvh.load("../vsctut/bvh/16_01_jump.bvh");
 
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
 	// create a ground
-	btBoxShape* groundShape = new btBoxShape(btVector3(btScalar(50.), btScalar(50.), btScalar(50.)));
+	btBoxShape* groundShape = new btBoxShape(btVector3(btScalar(500.), btScalar(50.), btScalar(500.)));
 	
 	btTransform groundTransform;
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0,-50, 0));
 	{
 		btScalar mass(0.);
-		createRigidBody(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
+		create_rigid_body(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
 	}
 
 	// {
@@ -228,10 +199,11 @@ int main(int argc, char* argv[]){
 		btScalar mass(0.001f);
 		
 		startTransform.setOrigin(btVector3(5,25,0));
-		box2 = createRigidBody(mass, startTransform, box);
+		box2 = create_rigid_body(mass, startTransform, box);
 	}
 
-	bvh.load("../../vsctut/bvh/16_01_jump.bvh");
+	// Load BVH
+	bvh.load("../../vsctut/bvh/16_15_walk.bvh");
 
     glutMainLoop();
 

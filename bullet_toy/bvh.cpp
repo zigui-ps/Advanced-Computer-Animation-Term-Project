@@ -253,53 +253,31 @@ void JOINT::draw_joint(int frame_starts_index, MOTION* motion){
         glPushMatrix();
 
         // For Debug
-        glPushMatrix();
-        glMultMatrixf((float*)glm::value_ptr(trans));
-        glMultMatrixf((float*)glm::value_ptr(glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f))));
-        draw_axes();
-        glPopMatrix();
+        // glPushMatrix();
+        // glMultMatrixf((float*)glm::value_ptr(trans));
+        // glMultMatrixf((float*)glm::value_ptr(glm::scale(glm::mat4(1.0f), glm::vec3(10.0f,10.0f,10.0f))));
+        // draw_axes();
+        // glPopMatrix();
 
-        //Draw sth
-        // this->setTransform((double*)glm::value_ptr(this->matrix));
-        // this->draw();
-
-        // Link
-
+        // Draw a link
         trans = glm::translate(trans, glm::vec3(this->offset.x/2, this->offset.y/2, this->offset.z/2));
 
         glMultMatrixf((float*)glm::value_ptr(trans));
 
-        if(this->offset.x/2 != 0){
-            //this->setSize(this->offset.x/2, 2, 2);
-            this->setTransform((float*)glm::value_ptr(trans));
-            this->draw();
-            //draw_box(btVector3(this->offset.x/2, 2, 2));
-        } else if(this->offset.y/2 != 0){
-            //this->setSize(2, this->offset.y/2, 2);
-            this->setTransform((float*)glm::value_ptr(trans));
-            this->draw();
-            //draw_box(btVector3(2, this->offset.y/2, 2));
-        } else if(this->offset.z/2 != 0){
-            //this->setSize(2, 2, this->offset.z/2);
-            this->setTransform((float*)glm::value_ptr(trans));
-            this->draw();
-            //draw_box(btVector3(2, 2, this->offset.z/2));
-        }
+        this->setTransform((float*)glm::value_ptr(trans));
+        this->draw();
+        
         glPopMatrix();
     }
 
     for(auto& child : this->children)
         child->draw_joint(frame_starts_index, motion);
-
-    //glPopMatrix();
-    // ourShader.setMat4("model", joint->matrix);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void JOINT::create_link(){
     printf("creating...\n");
     if(this->parent){
-        //glm::vec4 parent_world_pos = this->parent->matrix 
+
         glm::mat4 trans = glm::mat4(1.0f);
         trans = glm::translate(glm::mat4(1.0f), glm::vec3(this->offset.x/2, this->offset.y/2, this->offset.z/2));
 

@@ -13,7 +13,7 @@ void CollisionObject::createCollisionObject(float world_x, float world_y, float 
     m_mass = 5.f;
     
     m_trans.setOrigin(btVector3(world_x, world_y, world_z));
-    m_obj = createRigidBody(m_mass, m_trans, box, true);
+    m_obj = create_rigid_body(m_mass, m_trans, box, true);
 	m_obj->setWorldTransform(m_trans);
 
     printf("created\n");
@@ -33,7 +33,7 @@ void CollisionObject::createCollisionObject(float *m, float half_width, float ha
 
     m_mass = 5.f;
     
-    m_obj = createRigidBody(m_mass, m_trans, box, true);
+    m_obj = create_rigid_body(m_mass, m_trans, box, true);
 	m_obj->setWorldTransform(m_trans);
 
     printf("created\n");

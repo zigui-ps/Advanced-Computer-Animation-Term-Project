@@ -2,7 +2,20 @@
 
 btDiscreteDynamicsWorld* g_dynamicsWorld;
 
-btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, bool isKinematics/* = false*/){
+void init_bullet_world(){
+    btBroadphaseInterface* broadphase = new btDbvtBroadphase();
+    btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+    btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
+
+    btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
+
+    g_dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    g_dynamicsWorld->setGravity(btVector3(0,-10,0));
+
+    printf("Init bullet world\n");
+}
+
+btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollisionShape* shape, bool isKinematics/* = false*/){
 	//rigidbody is dynamic if and only if mass is non zero, otherwise static
 		bool isDynamic = (mass != 0.f);
 
@@ -11,7 +24,7 @@ btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCo
 			shape->calculateLocalInertia(mass, localInertia);
 		
 		btRigidBody* body = new btRigidBody(mass, 0, shape, localInertia);
-		body->setWorldTransform(startTransform);
+		body->setWorldTransform(trans);
 
 		body->setUserIndex(-1);
 		if(isKinematics){
