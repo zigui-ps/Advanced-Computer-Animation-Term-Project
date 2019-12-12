@@ -11,6 +11,7 @@ message(STATUS "${BULLET_LIBRARIES}")
 find_package(OpenGL REQUIRED)
 include_directories("${BULLET_INCLUDE_DIR}")
 include_directories("${OPENGL_INCLUDE_DIR}")
+include_directories("./")
 
 file(GLOB src "*.cpp")
 add_executable(sandbox ${src})
