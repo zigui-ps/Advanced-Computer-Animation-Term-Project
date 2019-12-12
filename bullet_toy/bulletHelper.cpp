@@ -1,4 +1,6 @@
 #include "bulletHelper.h"
+#include "openglHelper.h"
+#include <map>
 
 btDiscreteDynamicsWorld* g_dynamicsWorld;
 
@@ -35,94 +37,34 @@ btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollision
 		return body;
 }
 
-void draw_box(const btVector3& half_size){
-	float width = half_size.getX();
-	float height = half_size.getY();
-	float depth = half_size.getZ();
+void draw_soft_body(btSoftBody* psb){
+	int n = psb->m_nodes.size();
 
-	glBegin(GL_TRIANGLES);
-	glColor3f(0,0,0);
+	btVector3* normal = new btVector3[n];
+	std::map<btSoftBody::Node*, int> db;
 
-	// Top
-	glNormal3f(0,1,0);
-	glVertex3f(width, height, depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(-width, height, depth);
-
-	glVertex3f(width, height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(-width, height, -depth);
-
-	glNormal3f(0,0,-1);
-	glVertex3f(-width, -height, depth);
-	glVertex3f(-width, height, depth);
-	glVertex3f(width, -height, depth);
-	
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, depth);
-	glVertex3f(-width, height, depth);
-
-	glNormal3f(1,0,0);
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, -height, -depth);
-
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, height, depth);
-
-	// Bottom
-	glNormal3f(0,-1,0);
-	glVertex3f(width, -height, depth);
-	glVertex3f(-width, -height, -depth);
-	glVertex3f(-width, -height, depth);
-
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, -height, -depth);
-	glVertex3f(-width, -height, -depth);
-
-	glNormal3f(0,0,1);	
-	glVertex3f(-width, -height, -depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(width, -height, -depth);
-	
-	glVertex3f(width, -height, -depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(-width, height, -depth);
-
-	glNormal3f(-1,0,0);
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, -height, -depth);
-
-	glVertex3f(width, -height, depth);
-	glVertex3f(width, height, -depth);
-	glVertex3f(width, -height, -depth);
-
-	glNormal3f(-1,0,0);
-	glVertex3f(-width, -height, depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(-width, -height, -depth);
-
-	glVertex3f(-width, -height, depth);
-	glVertex3f(-width, height, -depth);
-	glVertex3f(-width, height, depth);
-	glEnd();
-}
-
-void draw_axes(){
-	glBegin(GL_LINES);
-	// draw line for x axis
-	glColor3f(1.0, 0.0, 0.0);
-	glVertex3f(0.0, 0.0, 0.0);
-	glVertex3f(1.0, 0.0, 0.0);
-	// draw line for y axis
-	glColor3f(0.0, 1.0, 0.0);
-	glVertex3f(0.0, 0.0, 0.0);
-	glVertex3f(0.0, 1.0, 0.0);
-	// draw line for Z axis
-	glColor3f(0.0, 0.0, 1.0);
-	glVertex3f(0.0, 0.0, 0.0);
-	glVertex3f(0.0, 0.0, 1.0);
-	glEnd();
+	for(int i = 0; i < n; i++){
+		normal[i].setZero();
+		db[&psb->m_nodes[i]] = i;
+	}
+	for(int i = 0; i < psb->m_faces.size(); ++i){
+		const btSoftBody::Face& f=psb->m_faces[i];	
+		const btVector3 x[]={f.m_n[0]->m_x,f.m_n[1]->m_x,f.m_n[2]->m_x};
+		btVector3 n = (x[2] - x[0]).cross(x[1] - x[0]).safeNormalize();
+		for(int j = 0; j < 3; j++){
+			int idx = db[f.m_n[j]];
+			normal[idx] += n;
+		}
+	}
+	for(int i = 0; i < n; i++) normal[i] = normal[i].safeNormalize();
+	for(int i = 0; i < psb->m_faces.size(); ++i){
+		const btSoftBody::Face& f=psb->m_faces[i];	
+		btVector3 x[3], y[3];
+		for(int j = 0; j < 3; j++){
+			x[j] = f.m_n[j]->m_x;
+			y[j] = normal[db[f.m_n[j]]];
+		}
+		drawTriangle(x[0], x[2], x[1], y[0], y[2], y[1], btVector3(0.0, 0.0, 1.0));
+	}
+	delete normal;
 }

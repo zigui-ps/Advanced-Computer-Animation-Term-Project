@@ -1,4 +1,5 @@
 #include "CollisionObject.h"
+#include "openglHelper.h"
 
 CollisionObject::CollisionObject(){
 
@@ -72,5 +73,5 @@ void CollisionObject::draw(){
 
     } 
 
-    draw_box(btVector3(m_width, m_height, m_depth));
+    draw_box(m_width, m_height, m_depth);
 }

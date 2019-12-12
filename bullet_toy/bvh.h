@@ -11,6 +11,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#include "openglHelper.h"
 #include "CollisionObject.h"
 
 #define Xposition 0x01

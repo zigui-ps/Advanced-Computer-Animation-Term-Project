@@ -9,6 +9,7 @@
 #include "LinearMath/btVector3.h"
 
 #include "bulletHelper.h"
+#include "openglHelper.h"
 #include "CollisionObject.h"
 
 #include "bvh.h"
@@ -84,6 +85,14 @@ void display(void)
 {
 	glClearColor(0.9, 0.9, 0.9, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glMultMatrixf((float*)glm::value_ptr(get_view_mat()));
+	// gluLookAt(250.0, -70.0, 150.0,   /* eye is at () */
+	// 		0.0, 20.0, -95.0,      /* center is at (0,0,0) */
+	// 		0.0, 1.0, 0.);      /* up is in positive Y direction */
+
 	
 	//Debug
 	g_dynamicsWorld->debugDrawWorld();
@@ -106,7 +115,7 @@ void display(void)
 	trans.getOpenGLMatrix(m);
 	glMultMatrixd(m);
 
-	draw_box(btVector3(5,5,5));
+	draw_box(5,5,5);
 	glPopMatrix();
 
 	// Bvh simulation
@@ -137,6 +146,9 @@ void init_gl(int argc, char* argv[]){
 	glutCreateWindow("Rigid");
 
     glutDisplayFunc(display);
+
+	glutKeyboardFunc(keyboard_callback);
+
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
@@ -149,16 +161,13 @@ void init_gl(int argc, char* argv[]){
 	glMatrixMode(GL_PROJECTION);
 	gluPerspective(40.0, 1.0, 1.0, 1000.0);
 
-	glMatrixMode(GL_MODELVIEW);
-	gluLookAt(250.0, -70.0, 150.0,   /* eye is at () */
-			0.0, 20.0, -95.0,      /* center is at (0,0,0) */
-			0.0, 1.0, 0.);      /* up is in positive Y direction */
-
     printf("Init GL\n");
 }
 
 int main(int argc, char* argv[]){
     init_gl(argc, argv);
+
+	init_cameras();
 
     init_bullet_world();
 	

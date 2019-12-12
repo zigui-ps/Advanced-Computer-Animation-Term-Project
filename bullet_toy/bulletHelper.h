@@ -2,16 +2,18 @@
 #define __BULLET_HELPER_H__
 
 #include "btBulletDynamicsCommon.h"
-#include <GL/glew.h>
-#include <GL/glu.h>
-#include <GL/glut.h>  // GLUT, include glu.h and gl.h
-#include <GL/freeglut.h>
+#include "BulletSoftBody/btDeformableMultiBodyDynamicsWorld.h"
+#include "BulletSoftBody/btSoftBody.h"
+#include "BulletSoftBody/btSoftBodyHelpers.h"
+#include "BulletSoftBody/btDeformableBodySolver.h"
+#include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
+#include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
 
 extern btDiscreteDynamicsWorld* g_dynamicsWorld;
 
-
 void init_bullet_world();
 btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollisionShape* shape, bool isKinematics = false);
-void draw_box(const btVector3& half_size);
-void draw_axes();
+
+void draw_soft_body(btSoftBody* psb);
+
 #endif //__BULLET_HELPER_H__
