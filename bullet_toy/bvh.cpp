@@ -275,7 +275,6 @@ void JOINT::draw_joint(int frame_starts_index, MOTION* motion){
 }
 
 void JOINT::create_link(){
-    printf("creating...\n");
     if(this->parent){
 
         glm::mat4 trans = glm::mat4(1.0f);

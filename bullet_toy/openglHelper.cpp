@@ -2,9 +2,12 @@
 
 std::vector<Camera*> camera_list;
 int cur_camera_idx = 0;
+bool clicked_right;
+int mouse_pos_x;
+int mouse_pos_y;
 
 void init_cameras(){
-    Camera* camera_1 = new Camera(glm::vec3(-150, 30, 250));
+    Camera* camera_1 = new Camera(glm::vec3(-700, 30, 100));
 
     camera_list.push_back(camera_1);
 }
@@ -12,6 +15,32 @@ void init_cameras(){
 glm::mat4 get_view_mat(){
     return camera_list[cur_camera_idx]->GetViewMatrix();
 }
+
+void mouse_callback(int button, int state, int x, int y){
+
+    // save mouse cursor position
+    mouse_pos_x = x;
+    mouse_pos_y = y;
+
+    if(button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN){
+        clicked_right = true;
+    }
+    if(button == GLUT_RIGHT_BUTTON && state == GLUT_UP){
+        clicked_right = false;
+    }
+}
+
+void mouse_drag_callback(int x, int y){
+
+    if(clicked_right){
+        camera_list[cur_camera_idx]->ProcessMouseMovement(x-mouse_pos_x, y-mouse_pos_y);
+    }
+
+    // save mouse cursor position
+    mouse_pos_x = x;
+    mouse_pos_y = y;
+}
+
 
 void keyboard_callback(unsigned char key, int x, int y){
     switch(key){
@@ -30,6 +59,18 @@ void keyboard_callback(unsigned char key, int x, int y){
         case 'd':
         case 'D':
             camera_list[cur_camera_idx]->ProcessKeyboard(RIGHT, 0.1);
+        break;
+        case 'z':
+        case 'Z':
+            camera_list[cur_camera_idx]->ProcessKeyboard(UP, 0.1);
+        break;
+        case 'x':
+        case 'X':
+            camera_list[cur_camera_idx]->ProcessKeyboard(DOWN, 0.1);
+        break;
+        case 'r':
+        case 'R':
+            camera_list[cur_camera_idx]->reset();
         break;
     }
     glutPostRedisplay();

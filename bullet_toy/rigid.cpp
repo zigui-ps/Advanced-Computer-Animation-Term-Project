@@ -107,7 +107,7 @@ void display(void)
 	float trans_y = float(trans.getOrigin().getY());
 	float trans_z = float(trans.getOrigin().getZ());
 
-	printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+	//printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -147,7 +147,12 @@ void init_gl(int argc, char* argv[]){
 
 	glutDisplayFunc(display);
 
+	// Register callback functions
+	// ------------------------------------------------------------
+	glutMouseFunc(mouse_callback);
+	glutMotionFunc(mouse_drag_callback);
 	glutKeyboardFunc(keyboard_callback);
+	// ------------------------------------------------------------
 
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 
@@ -159,9 +164,21 @@ void init_gl(int argc, char* argv[]){
 	glEnable(GL_DEPTH_TEST);
 
 	glMatrixMode(GL_PROJECTION);
-	gluPerspective(40.0, 1.0, 1.0, 1000.0);
+	gluPerspective(40.0, 1.0, 1.0, 10000.0);
 
 	printf("Init GL\n");
+
+	printf("== How to Handle Camera ==========================\n");
+	printf(" - R: Reset to default condition.");
+	printf(" - W: Make the camera go front.\n");
+	printf(" - A: Make the camera go left.\n");
+	printf(" - S: Make the camera go backward.\n");
+	printf(" - D: Make the camera go right.\n");
+	printf(" - Z: Make the camera go up.\n");
+	printf(" - X: Make the camera go down.\n");
+	printf(" - MOUSE RIGHT CLICK & DRAG: Rotate the camera.\n");
+	printf("==================================================\n");
+
 }
 
 int main(int argc, char* argv[]){

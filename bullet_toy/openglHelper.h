@@ -14,7 +14,9 @@
 
 void init_cameras();
 glm::mat4 get_view_mat();
-//void mouse_callback(int button, int state, int x, int y);
+
+void mouse_callback(int button, int state, int x, int y);
+void mouse_drag_callback(int x, int y);
 void keyboard_callback(unsigned char key, int x, int y);
 
 void draw_box(float width, float height, float depth);

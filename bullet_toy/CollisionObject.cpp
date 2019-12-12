@@ -16,8 +16,6 @@ void CollisionObject::createCollisionObject(float world_x, float world_y, float 
     m_trans.setOrigin(btVector3(world_x, world_y, world_z));
     m_obj = create_rigid_body(m_mass, m_trans, box, true);
 	m_obj->setWorldTransform(m_trans);
-
-    printf("created\n");
 }
 
 void CollisionObject::createCollisionObject(float *m, float half_width, float half_height, float half_depth){
@@ -30,14 +28,11 @@ void CollisionObject::createCollisionObject(float *m, float half_width, float ha
         dm[i] = m[i];
     }
     m_trans.setFromOpenGLMatrix(dm);
-    printf("pos object  = %f,%f,%f\n", m_trans.getOrigin().getX(), m_trans.getOrigin().getY(), m_trans.getOrigin().getZ());
 
-    m_mass = 5.f;
+    m_mass = 10.f;
     
     m_obj = create_rigid_body(m_mass, m_trans, box, true);
 	m_obj->setWorldTransform(m_trans);
-
-    printf("created\n");
 }
 
 
@@ -69,7 +64,7 @@ void CollisionObject::setSize(float half_width, float half_height, float half_de
 void CollisionObject::draw(){
     if(m_obj){
         btTransform trans = m_obj->getWorldTransform();
-        printf("world pos object  = %f,%f,%f\n", trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
+        //printf("world pos object  = %f,%f,%f\n", trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
 
     } 
 
