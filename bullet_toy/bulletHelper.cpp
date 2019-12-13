@@ -77,9 +77,11 @@ void draw_rope(btSoftBody* psb, double R, int c1, int c2){
 		glBegin(GL_QUAD_STRIP);
 		for(int i = 0; i <= c2; i++){
 			double rad = PI * 2 / c2 * i;
-			btVector3 q0 = p0 + R*(l * cos(rad) + up * sin(rad));
-			btVector3 q1 = p1 + R*(l2 * cos(rad) + up2 * sin(rad));
+			btVector3 d0 = l * cos(rad) + up * sin(rad), q0 = p0 + d0 * R;
+			btVector3 d1 = l2 * cos(rad) + up2 * sin(rad), q1 = p1 + d1 * R;
+			glNormal3d(d0.x(), d0.y(), d0.z());
 			glVertex3d(q0.x(), q0.y(), q0.z());
+			glNormal3d(d1.x(), d1.y(), d1.z());
 			glVertex3d(q1.x(), q1.y(), q1.z());
 		}
 		glEnd();
