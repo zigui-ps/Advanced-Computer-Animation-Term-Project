@@ -8,6 +8,7 @@
 #include "Motion/Parser.h"
 
 const double PI = acos(-1);
+extern double scale;
 
 using BVHNode = Parser::BVHNode;
 
@@ -38,7 +39,7 @@ void Parser::BVHNode::readFile(std::ifstream &file, SkeletonPosePtr pose){
 				case 'Y': idx = 1; break;
 				case 'Z': idx = 2; break;
 			}
-			pose->location[idx] = value / 100.0;
+			pose->location[idx] = value / 100.0 * scale;
 		}
 	}
 	pose->joint.push_back(rotation);
