@@ -145,8 +145,10 @@ void nextTimestep(int time){
 	t.setOrigin(btVector3(((float)rand()/RAND_MAX) * 20, 0, 0));
 	//box1->setTransform(t);
 
-	skel->location = Eigen::Vector3d(0, 0, 0);
 	player->nextTimestep(time);
+	skel->location = Eigen::Vector3d(0, 0, 0);
+	skel->root->jointTransform = Eigen::Quaterniond::Identity();
+	skel->setTransform();
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
 
 	glutPostRedisplay();
