@@ -72,13 +72,14 @@ void  DebugDrawer::setDebugMode(int debugMode)
 }
 
 DebugDrawer* debugDrawer = new DebugDrawer();
-GLfloat light_diffuse[] = {1.0, 0.0, 0.0, 1.0};  /* Red diffuse light. */
-GLfloat light_position[] = {10.0, 10.0, -1.0, 0.0};  /* Infinite light location. */
+GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
+GLfloat light_position[] = {10.0, 10.0, 1.0, 0.0};  /* Infinite light location. */
 
 btRigidBody *box2;
 btSoftBody *rope;
 GraphPlayerPtr player;
 SkeletonPtr skel;
+ShapeInfoPtr ground;
 
 int cnt=0;
 void display(void)
@@ -124,7 +125,7 @@ void display(void)
 		draw_soft_body(psb);
 	}
 	skel->display();
-	printf("%lf %lf %lf\n", skel->location[0], skel->location[1], skel->location[2]);
+	ground->display();
 
 	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
 	{
@@ -144,8 +145,8 @@ void nextTimestep(int time){
 	t.setOrigin(btVector3(((float)rand()/RAND_MAX) * 20, 0, 0));
 	//box1->setTransform(t);
 
-	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
 	player->nextTimestep(time);
+	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
 
 	glutPostRedisplay();
 }
@@ -261,6 +262,7 @@ int main(int argc, char* argv[]){
 		box2->setAngularVelocity(btVector3(10, 0, 0));
 	}
 //*
+	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
 	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
 	skel = SkeletonPtr(new Skeleton(doc));
 	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));

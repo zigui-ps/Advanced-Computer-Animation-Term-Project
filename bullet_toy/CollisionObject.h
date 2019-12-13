@@ -2,27 +2,18 @@
 #define __COLLISION_OBJECT_H__
 
 #include "bulletHelper.h"
+#include<Eigen/Dense>
 
 class CollisionObject{
 public:
-    CollisionObject();
-
-    void createCollisionObject(float world_x, float world_y, float world_z, float half_width, float half_height, float half_depth);
-    void createCollisionObject(float *m, float half_width, float half_height, float half_depth);
-    void setTransform(float* m);
-    void setTransform(btTransform m);
-    void setSize(float half_width, float half_height, float half_depth);
-    void draw();
-
-protected:
-    btTransform m_trans;
-    
-    float m_width, m_height, m_depth;
+    CollisionObject(double m_mass);
+    virtual void setTransform(Eigen::Affine3d m);
+//protected:
     btScalar m_mass;
-
     btRigidBody* m_obj;
+private:
+    virtual void setTransform(double* m);
+    virtual void setTransform(float* m);
 };
-
-
 
 #endif //__COLLISION_OBJECT_H__

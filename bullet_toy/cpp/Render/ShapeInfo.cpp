@@ -2,19 +2,27 @@
 #include<GL/freeglut.h>
 #include <GL/glu.h>
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
+#include<assert.h>
 #include "Render/ShapeInfo.h"
 
 const double PI = acos(-1);
 
 // ShapeInfo
 
-ShapeInfo::ShapeInfo(Eigen::Affine3d location) : location(location){
-}
+ShapeInfo::ShapeInfo(Eigen::Affine3d location, double m_mass) : CollisionObject(m_mass), location(location){}
 
 // Cuboid
 
-Cuboid::Cuboid(Eigen::Affine3d location, Eigen::Vector3d info) : 
-	ShapeInfo(location), info(info){
+Cuboid::Cuboid(Eigen::Affine3d location, Eigen::Vector3d info, double m_mass) : 
+		ShapeInfo(location * Eigen::Affine3d(Eigen::Translation3d(-info[0]/2, -info[1]/2, -info[2]/2)), m_mass), info(info){
+    btBoxShape *box = new btBoxShape(btVector3(info[0]/2, info[1]/2, info[2]/2));
+    btTransform m_trans; m_trans.setIdentity();
+    m_obj = create_rigid_body(m_mass, m_trans, box, true);
+}
+
+void Cuboid::setTransform(Eigen::Affine3d m){
+	Eigen::Affine3d center = Eigen::Affine3d(Eigen::Translation3d(info[0]/2, info[1]/2, info[2]/2));
+	CollisionObject::setTransform(m * location * center); 
 }
 
 //    6----7
@@ -57,7 +65,7 @@ void Cuboid::display()
 }
 
 // Sphere
-
+/*
 Sphere::Sphere(Eigen::Affine3d location, double radius):
 	ShapeInfo(location), radius(radius){
 }
@@ -105,11 +113,14 @@ void Cylinder::display()
 	}
 	glPopMatrix();
 }
-
+*/
 // Ground
 
 GroundShape::GroundShape(int n, int m, double x, double z):
-	ShapeInfo(Eigen::Affine3d::Identity()), n(n), m(m), x(x), z(z){
+	ShapeInfo(Eigen::Affine3d::Identity(), 0), n(n), m(m), x(x), z(z){
+    btBoxShape *box = new btBoxShape(btVector3(n*x*2, 10, m*z*2));
+    btTransform m_trans; m_trans.setOrigin(btVector3(0, -5, 0));
+    m_obj = create_rigid_body(m_mass, m_trans, box, true);
 }
 
 void GroundShape::display()
@@ -139,5 +150,13 @@ void GroundShape::display()
 		}
 	}
 	glEnd();
-	glColor3d(0.0, 0.0, 1.0);
+	glBegin(GL_POLYGON);
+	glNormal3d(0, 1, 0);
+	glVertex3d(-n*x, 0, -m*z);
+	glVertex3d(-n*x, 0, m*z);
+	glVertex3d(n*x, 0, m*z);
+	glVertex3d(n*x, 0, -m*z);
+	glEnd();
 }
+
+void GroundShape::setTransform(Eigen::Affine3d m){ assert(false); }

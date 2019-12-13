@@ -10,6 +10,7 @@
 #include<iostream>
 #include "Render/Drawable.h"
 #include "Render/ShapeInfo.h"
+#include "CollisionObject.h"
 
 class SkeletonNode;
 class Skeleton;
@@ -26,6 +27,7 @@ public:
 	SkeletonNodePtr parent;
 	int idx;
 
+	void setTransform(Eigen::Affine3d m);
 	void display();
 };
 
@@ -55,6 +57,7 @@ public:
 	Eigen::Vector3d location;
 
 	void forwardKinematics();
+	void setTransform();
 	void inverseKinematics(const std::vector<IKConstraint> &constraint);
 	Eigen::MatrixXd getJacobian(const std::vector<IKConstraint> &constraint);
 

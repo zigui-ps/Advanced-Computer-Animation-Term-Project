@@ -25,13 +25,20 @@ static void glRotated(Eigen::Quaterniond Q){
 
 void SkeletonNode::display(){
 	for(ShapeInfoPtr shape : shapeList) shape->display();
+	/*
 	for(SkeletonNodePtr child : childNodeList){
 		Eigen::Vector3d p = child->parentTransform.translation();
 		glBegin(GL_LINES);
+		glColor3f(1.0, 1.0, 1.0);
 		glVertex3f(0, 0, 0);
 		glVertex3f(p[0], p[1], p[2]);
 		glEnd();
 	}
+	*/
+}
+
+void SkeletonNode::setTransform(Eigen::Affine3d m){
+	for(ShapeInfoPtr shape : shapeList) shape->setTransform(m);
 }
 
 // Skeleton
@@ -57,10 +64,10 @@ static Eigen::AngleAxisd stringToAngleAxisd(std::string data){
 static Eigen::Affine3d getAffineTransform(TiXmlElement *body)
 {
 	Eigen::Affine3d affine = Eigen::Affine3d::Identity();
-	if(auto it = body->Attribute("translate"))
-		affine.translate(stringToVector3d(it));
 	if(auto it = body->Attribute("rotate"))
 		affine.rotate(stringToAngleAxisd(it));
+	if(auto it = body->Attribute("translate"))
+		affine.translate(stringToVector3d(it));
 	
 	return affine;
 }
@@ -77,22 +84,28 @@ static SkeletonNodePtr helper(TiXmlElement *body, Skeleton* skel)
 	}
 
 	for(TiXmlElement *child = body->FirstChildElement(); child != NULL; child = child->NextSiblingElement()){
-		if(child->ValueStr() == "Sphere"){
+		if(child->ValueStr() == "Cuboid"){
+			Eigen::Vector3d info = stringToVector3d(child->Attribute("info"));
+			Eigen::Affine3d affine = getAffineTransform(child);
+			double m_mass;
+			if(auto it = child->Attribute("mass")) m_mass = stringToDouble(it);
+			else{
+				m_mass = info[0] * info[1] * info[2] * 100;
+			}
+			current->shapeList.push_back(ShapeInfoPtr((ShapeInfo*)new Cuboid(affine, info, m_mass)));
+		}
+		/*
+		else if(child->ValueStr() == "Sphere"){
 			double radius = stringToDouble(child->Attribute("radius"));
 			Eigen::Affine3d affine = getAffineTransform(child);
 			current->shapeList.push_back(ShapeInfoPtr((ShapeInfo*)new Sphere(affine, radius)));
-		}
-		else if(child->ValueStr() == "Cuboid"){
-			Eigen::Vector3d info = stringToVector3d(child->Attribute("info"));
-			Eigen::Affine3d affine = getAffineTransform(child);
-			current->shapeList.push_back(ShapeInfoPtr((ShapeInfo*)new Cuboid(affine, info)));
 		}
 		else if(child->ValueStr() == "Cylinder"){
 			double radius = stringToDouble(child->Attribute("radius"));
 			double height = stringToDouble(child->Attribute("height"));
 			Eigen::Affine3d affine = getAffineTransform(child);
 			current->shapeList.push_back(ShapeInfoPtr((ShapeInfo*)new Cylinder(affine, radius, height)));
-		}
+		}*/
 		else if(child->ValueStr() == "Joint"){
 			current->childNodeList.push_back(helper(child, skel));
 			current->childNodeList.back()->parent = current;
@@ -140,6 +153,13 @@ void Skeleton::forwardKinematics()
 		nodeLocation[i].rotate(cur->jointTransform);
 		nodeLocation[i] = cur->parentTransform * nodeLocation[i];
 		if(i) nodeLocation[i] = nodeLocation[cur->parent->idx] * nodeLocation[i];
+	}
+}
+
+void Skeleton::setTransform(){
+	this->forwardKinematics();
+	for(int i = 0; i < nodeList.size(); i++){
+		nodeList[i]->setTransform(nodeLocation[i]);
 	}
 }
 

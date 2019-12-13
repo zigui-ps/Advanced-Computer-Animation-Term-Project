@@ -133,7 +133,7 @@ GraphPlayer::GraphPlayer(SkeletonPtr skel, MotionGraphPtr graph):
 }
 
 void GraphPlayer::display(){
-	GUI::DrawGround(skel->location[0], skel->location[2], 0);
+	//GUI::DrawGround(skel->location[0], skel->location[2], 0);
 }
 
 void GraphPlayer::nextTimestep(int time){
@@ -143,6 +143,7 @@ void GraphPlayer::nextTimestep(int time){
 	skel->location = pose->location;
 	for(int i = 0; i < skel->nodeList.size(); i++)
 		skel->nodeList[i]->jointTransform = pose->joint[i];
+	skel->setTransform();
 }
 
 void GraphPlayer::keyboard(unsigned char key, int x, int y){

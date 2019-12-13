@@ -1,13 +1,16 @@
 #include "openglHelper.h"
+#include "Render/Render.h"
 
 std::vector<Camera*> camera_list;
 int cur_camera_idx = 0;
 bool clicked_right;
 int mouse_pos_x;
 int mouse_pos_y;
+extern GraphPlayerPtr player;
 
 void init_cameras(){
-    Camera* camera_1 = new Camera(glm::vec3(-700, 30, 100));
+//    Camera* camera_1 = new Camera(glm::vec3(-700, 30, 100));
+    Camera* camera_1 = new Camera(glm::vec3(-5, 0, 0));
 
     camera_list.push_back(camera_1);
 }
@@ -43,30 +46,31 @@ void mouse_drag_callback(int x, int y){
 
 
 void keyboard_callback(unsigned char key, int x, int y){
+	player->keyboard(key, x, y);
     switch(key){
         case 'w':
         case 'W':
-            camera_list[cur_camera_idx]->ProcessKeyboard(FORWARD, 0.1);
+            camera_list[cur_camera_idx]->ProcessKeyboard(FORWARD, 0.01);
             break;
         case 'a':
         case 'A':
-            camera_list[cur_camera_idx]->ProcessKeyboard(LEFT, 0.1);
+            camera_list[cur_camera_idx]->ProcessKeyboard(LEFT, 0.01);
             break;
         case 's':
         case 'S':
-            camera_list[cur_camera_idx]->ProcessKeyboard(BACKWARD, 0.1);
+            camera_list[cur_camera_idx]->ProcessKeyboard(BACKWARD, 0.01);
         break;
         case 'd':
         case 'D':
-            camera_list[cur_camera_idx]->ProcessKeyboard(RIGHT, 0.1);
+            camera_list[cur_camera_idx]->ProcessKeyboard(RIGHT, 0.01);
         break;
         case 'z':
         case 'Z':
-            camera_list[cur_camera_idx]->ProcessKeyboard(UP, 0.1);
+            camera_list[cur_camera_idx]->ProcessKeyboard(UP, 0.01);
         break;
         case 'x':
         case 'X':
-            camera_list[cur_camera_idx]->ProcessKeyboard(DOWN, 0.1);
+            camera_list[cur_camera_idx]->ProcessKeyboard(DOWN, 0.01);
         break;
         case 'r':
         case 'R':
