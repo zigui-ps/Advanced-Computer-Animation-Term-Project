@@ -125,7 +125,7 @@ GroundShape::GroundShape(int n, int m, double x, double z):
 
 void GroundShape::display()
 {
-	glColor3d(0.0, 0.0, 0.0);
+	glColor3d(0.5, 0.5, 0.5);
 	glBegin(GL_LINES);
 	for(int i = -n; i <= n; i++){
 		if(i == 0){

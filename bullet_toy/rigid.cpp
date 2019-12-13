@@ -71,11 +71,12 @@ void  DebugDrawer::setDebugMode(int debugMode)
 	m_debugMode = debugMode;
 }
 
+
 DebugDrawer* debugDrawer = new DebugDrawer();
 GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
 GLfloat light_position[] = {10.0, 10.0, 1.0, 0.0};  /* Infinite light location. */
 
-btRigidBody *box2;
+btRigidBody *invisible_box;
 btSoftBody *rope;
 GraphPlayerPtr player;
 SkeletonPtr skel;
@@ -99,7 +100,7 @@ void display(void)
 	g_dynamicsWorld->debugDrawWorld();
 
 
-	btRigidBody* body = box2;
+	btRigidBody* body = invisible_box;
 	btTransform trans;
 
 	trans = body->getWorldTransform();
@@ -146,7 +147,9 @@ void nextTimestep(int time){
 	//box1->setTransform(t);
 
 	player->nextTimestep(time);
-	skel->location = Eigen::Vector3d(0, 0, 0);
+	btTransform trans = invisible_box->getWorldTransform();
+
+	skel->location = Eigen::Vector3d(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
 	skel->root->jointTransform = Eigen::Quaterniond::Identity();
 	skel->setTransform();
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
@@ -176,6 +179,10 @@ void init_gl(int argc, char* argv[]){
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
 
+	// Color
+	glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
+	glEnable(GL_COLOR_MATERIAL);
+
 	glEnable(GL_DEPTH_TEST);
 
 	glMatrixMode(GL_PROJECTION);
@@ -184,7 +191,7 @@ void init_gl(int argc, char* argv[]){
 	printf("Init GL\n");
 
 	printf("== How to Handle Camera ==========================\n");
-	printf(" - R: Reset to default condition.");
+	printf(" - R: Reset to default condition.\n");
 	printf(" - W: Make the camera go front.\n");
 	printf(" - A: Make the camera go left.\n");
 	printf(" - S: Make the camera go backward.\n");
@@ -232,23 +239,23 @@ int main(int argc, char* argv[]){
 	// 	box1->createCollisionObject(0,10,0, 5,5,5);
 	// }
 	{
-		// btSoftBody* psb = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(0, 1.5, -1), btVector3(0, 1.5, 0),10, 1);
-		// psb->getCollisionShape()->setMargin(0.1);
-		// psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
-		// psb->m_cfg.kCHR = 1; // collision hardness with rigid body
-		// psb->m_cfg.kDF = 2;
-		// psb->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+		btSoftBody* psb = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(5, 80, -8), btVector3(5, 80, -3),10, 1);
+		psb->getCollisionShape()->setMargin(0.1);
+		psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
+		psb->m_cfg.kCHR = 1; // collision hardness with rigid body
+		psb->m_cfg.kDF = 2;
+		psb->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
 
-		// psb->m_materials[0]->m_kLST = 0;
+		psb->m_materials[0]->m_kLST = 0.5;
 		
-		// psb->setTotalMass(5.f);
-		// g_dynamicsWorld->addSoftBody(psb);
+		psb->setTotalMass(5.f);
+		g_dynamicsWorld->addSoftBody(psb);
 
-		// btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
-		// g_dynamicsWorld->addForce(psb, mass_spring);
+		btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
+		g_dynamicsWorld->addForce(psb, mass_spring);
 
-		// btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
-		// g_dynamicsWorld->addForce(psb, gravity_force);
+		btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
+		g_dynamicsWorld->addForce(psb, gravity_force);
 	
 		btBoxShape *box = new btBoxShape(btVector3(btScalar(0.5), btScalar(0.5), btScalar(0.5)));
 
@@ -257,12 +264,16 @@ int main(int argc, char* argv[]){
 
 		btScalar mass(10.0f);
 
-		startTransform.setOrigin(btVector3(0,0.5,0));
-		box2 = create_rigid_body(mass, startTransform, box);
-		//psb->appendDeformableAnchor(psb->m_nodes.size() - 1, box2);
+		startTransform.setOrigin(btVector3(5, 80.5, -3));
+		invisible_box = create_rigid_body(mass, startTransform, box);
 
-		box2->setLinearVelocity(btVector3(0, 2, 0));
-		box2->setAngularVelocity(btVector3(10, 0, 0));
+		// Deactivate collision for box.
+		invisible_box->setCollisionFlags(invisible_box->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+		psb->appendDeformableAnchor(psb->m_nodes.size() - 1, invisible_box);
+
+		invisible_box->setLinearVelocity(btVector3(0, 2, 0));
+		invisible_box->setAngularVelocity(btVector3(10, 0, 0));
 	}
 //*
 	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
