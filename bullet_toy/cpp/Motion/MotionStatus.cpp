@@ -2,7 +2,7 @@
 #include "Skeleton/Helper.h"
 #include<algorithm>
 
-const int BLENDINGFRAME = 20;
+const int BLENDINGFRAME = 10;
 const double PI = acos(-1);
 
 // Graph
