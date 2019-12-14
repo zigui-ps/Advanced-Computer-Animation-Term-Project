@@ -42,7 +42,7 @@ using IKPlayerPtr = std::shared_ptr<IKPlayer>;
 
 class GraphPlayer : public Drawable{
 	public:
-	GraphPlayer(SkeletonPtr skel, MotionGraphPtr graph);
+	GraphPlayer(SkeletonPtr skel, MotionGraphPtr graph, Eigen::Vector3d location);
 	
 	void display();
 	void nextTimestep(int time);
@@ -52,6 +52,7 @@ class GraphPlayer : public Drawable{
 	SkeletonPtr skel;
 	MotionGraphPtr graph;
 	MotionStatusPtr status;
+	double Yoff;
 };
 
 using GraphPlayerPtr = std::shared_ptr<GraphPlayer>;

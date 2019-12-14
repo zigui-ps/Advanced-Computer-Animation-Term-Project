@@ -129,12 +129,6 @@ void display(void)
 	ground->display();
 	draw_rope(rope, 1, 20, 20);
 
-	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
-	{
-		btSoftBody* psb = (btSoftBody*)g_dynamicsWorld->getSoftBodyArray()[i];
-		draw_soft_body(psb);
-	}
-
 	glutSwapBuffers();
 }
 
@@ -142,12 +136,7 @@ void nextTimestep(int time){
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 	float internalTimeStep = 1. / 240.f, deltaTime = 1. / 60.f;
 
-	btTransform t;
-	t.setIdentity();
-	t.setOrigin(btVector3(((float)rand()/RAND_MAX) * 20, 0, 0));
-	//box1->setTransform(t);
-
-	//player->nextTimestep(time);
+	player->nextTimestep(time);
 	// btTransform trans = invisible_box->getWorldTransform();
 
 	// skel->location = Eigen::Vector3d(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
@@ -267,36 +256,44 @@ int main(int argc, char* argv[]){
 		//invisible_box->setLinearVelocity(btVector3(0, 2, 0));
 		//invisible_box->setAngularVelocity(btVector3(10, 0, 0));
 
-		ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
-		TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
-		skel = SkeletonPtr(new Skeleton(doc));
-		skel->turnOffKinematics();
-		CollisionObjectPtr coll_obj = skel->getCollisionObject("pelvis");
-		btRigidBody* body = coll_obj->m_obj;
+		// ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
+		// TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
+		// skel = SkeletonPtr(new Skeleton(doc));
+		// skel->turnOffKinematics();
+		// CollisionObjectPtr coll_obj = skel->getCollisionObject("pelvis");
+		// btRigidBody* body = coll_obj->m_obj;
 		
-		skel->location = Eigen::Vector3d(5, 80.5, -3);
-		skel->setTransform();
+		// skel->location = Eigen::Vector3d(5, 80.5, -3);
+		// skel->setTransform();
 
-		btTransform trans = body->getWorldTransform();
+		// btTransform trans = body->getWorldTransform();
 
-		float trans_x = float(trans.getOrigin().getX());
-		float trans_y = float(trans.getOrigin().getY());
-		float trans_z = float(trans.getOrigin().getZ());
+		// float trans_x = float(trans.getOrigin().getX());
+		// float trans_y = float(trans.getOrigin().getY());
+		// float trans_z = float(trans.getOrigin().getZ());
 
-		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
-
-
-		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+		// rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
 
 
+		// printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 
-		MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
-		player = GraphPlayerPtr(new GraphPlayer(skel, graph));
 
-		skel->location = Eigen::Vector3d(5, 80.5, -3);
-		skel->setTransform();
+
+		// MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
+		// player = GraphPlayerPtr(new GraphPlayer(skel, graph));
+
+		// skel->location = Eigen::Vector3d(5, 80.5, -3);
+		// skel->setTransform();
 	}
 
+//*
+	Eigen::Vector3d location = Eigen::Vector3d(-10, 10, -10);
+	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
+	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
+	skel = SkeletonPtr(new Skeleton(doc));
+	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
+	player = GraphPlayerPtr(new GraphPlayer(skel, graph, location));
+// */
 	glutMainLoop();
 
 	return 0;

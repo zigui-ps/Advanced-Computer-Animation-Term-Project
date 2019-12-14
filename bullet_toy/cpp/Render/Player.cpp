@@ -127,9 +127,9 @@ void IKPlayer::popConstraint(){
 	constraint.pop_back();
 }
 
-GraphPlayer::GraphPlayer(SkeletonPtr skel, MotionGraphPtr graph):
-	skel(skel), graph(graph){
-	status = MotionStatusGraphPtr(new MotionStatusGraph(graph, 0, 0, 0, 0, 0, 0));
+GraphPlayer::GraphPlayer(SkeletonPtr skel, MotionGraphPtr graph, Eigen::Vector3d location):
+	skel(skel), graph(graph), Yoff(location[1]){
+	status = MotionStatusGraphPtr(new MotionStatusGraph(graph, 0, 0, 0, 0, location[0], location[2]));
 }
 
 void GraphPlayer::display(){
@@ -140,8 +140,7 @@ void GraphPlayer::nextTimestep(int time){
 	status = status->step(status);
 	SkeletonPosePtr pose = status->getPosition();
 	
-	skel->location = pose->location;
-	skel->location = Eigen::Vector3d(0, 0, 0);
+	skel->location = pose->location + Eigen::Vector3d(0, Yoff, 0);
 	for(int i = 0; i < skel->nodeList.size(); i++)
 		skel->nodeList[i]->jointTransform = pose->joint[i];
 }
