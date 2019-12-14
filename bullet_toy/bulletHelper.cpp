@@ -41,6 +41,46 @@ btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollision
 		return body;
 }
 
+btRigidBody* create_ground(float x, float y, float z){
+	///create a ground
+	btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(x), btScalar(y), btScalar(z)));
+
+	btTransform groundTransform;
+	groundTransform.setIdentity();
+	groundTransform.setOrigin(btVector3(0, -y, 0));
+	groundTransform.setRotation(btQuaternion(btVector3(1, 0, 0), SIMD_PI * 0.));
+	//We can also use DemoApplication::localCreateRigidBody, but for clarity it is provided here:
+	btScalar mass(0.);
+
+	//rigidbody is dynamic if and only if mass is non zero, otherwise static
+	bool isDynamic = (mass != 0.f);
+
+	btVector3 localInertia(0, 0, 0);
+	if (isDynamic)
+		groundShape->calculateLocalInertia(mass, localInertia);
+
+	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
+	btRigidBody* body = new btRigidBody(rbInfo);
+	body->setFriction(1);
+
+	g_dynamicsWorld->addRigidBody(body);
+	return body;
+}
+
+btRigidBody* create_jump_building(){
+	btTransform trans;
+	//trans.setIdentity();
+	trans.setOrigin(btVector3(-1.0, 80.0, 0.0));
+
+	btScalar mass(1.0f);
+	btRigidBody* body =  create_rigid_body(mass, trans, new btBoxShape(btVector3(btScalar(1), btScalar(5), btScalar(1))));
+	body->setFriction(1);
+
+	return body;
+}
+
 void get_spline(btVector3 p0, btVector3 p1, btVector3 p2, btVector3 p3, std::vector<btVector3> &points, int cnt){
 	for(int i = 0; i <= cnt; i++){
 		double t = i / (double)cnt;

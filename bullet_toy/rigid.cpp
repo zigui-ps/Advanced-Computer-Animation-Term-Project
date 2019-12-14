@@ -77,6 +77,7 @@ GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
 GLfloat light_position[] = {10.0, 10.0, 1.0, 0.0};  /* Infinite light location. */
 
 btRigidBody *invisible_box;
+btRigidBody *jump_building;
 btSoftBody *rope;
 GraphPlayerPtr player;
 SkeletonPtr skel;
@@ -91,9 +92,6 @@ void display(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glMultMatrixf((float*)glm::value_ptr(get_view_mat()));
-	// gluLookAt(250.0, -70.0, 150.0,   /* eye is at () */
-	// 		0.0, 20.0, -95.0,      /* center is at (0,0,0) */
-	// 		0.0, 1.0, 0.);      /* up is in positive Y direction */
 
 
 	//Debug
@@ -143,6 +141,13 @@ void nextTimestep(int time){
 	//skel->root->jointTransform = Eigen::Quaterniond::Identity();
 	//skel->setTransform();
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
+
+		btTransform trans = jump_building->getWorldTransform();
+
+		float trans_x = float(trans.getOrigin().getX());
+		float trans_y = float(trans.getOrigin().getY());
+		float trans_z = float(trans.getOrigin().getZ());
+		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 
 	glutPostRedisplay();
 }
@@ -209,21 +214,11 @@ int main(int argc, char* argv[]){
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
 
+	{
+		//create_ground();
 
-	// {
-	// 	// btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
+	}
 
-	// 	// btTransform startTransform;
-	// 	// startTransform.setIdentity();
-
-	// 	// btScalar mass(5.f);
-
-	// 	// startTransform.setOrigin(btVector3(0,10,0));
-	// 	// box1 = createRigidBody(mass, startTransform, box, true);
-
-	// 	box1 = new CollisionObject();
-	// 	box1->createCollisionObject(0,10,0, 5,5,5);
-	// }
 	{
 		rope = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(5, 80, -8), btVector3(5, 80, -3),10, 1);
 		rope->getCollisionShape()->setMargin(0.1);
@@ -289,6 +284,16 @@ int main(int argc, char* argv[]){
 
 		// skel->location = Eigen::Vector3d(5, 80.5, -3);
 		// skel->setTransform();
+	}
+	{
+		jump_building = create_jump_building();
+		btTransform trans = jump_building->getWorldTransform();
+
+		float trans_x = float(trans.getOrigin().getX());
+		float trans_y = float(trans.getOrigin().getY());
+		float trans_z = float(trans.getOrigin().getZ());
+		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+
 	}
 
 //*
