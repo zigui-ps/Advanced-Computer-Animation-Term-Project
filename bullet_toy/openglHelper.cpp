@@ -10,7 +10,7 @@ extern GraphPlayerPtr player;
 
 void init_cameras(){
 //    Camera* camera_1 = new Camera(glm::vec3(-700, 30, 100));
-    Camera* camera_1 = new Camera(glm::vec3(-50, 85, -3));
+    Camera* camera_1 = new Camera(glm::vec3(-50, 85, -50));
 
     camera_list.push_back(camera_1);
 }

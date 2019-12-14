@@ -79,6 +79,7 @@ GLfloat light_position[] = {10.0, 10.0, 1.0, 0.0};  /* Infinite light location. 
 btRigidBody *invisible_box;
 btRigidBody *jump_building;
 btSoftBody *rope;
+btSoftBody *cloak;
 GraphPlayerPtr player;
 SkeletonPtr skel;
 ShapeInfoPtr ground;
@@ -125,11 +126,12 @@ void display(void)
 	}
 	skel->display();
 	ground->display();
-	draw_rope(rope, 1, 20, 20);
+	draw_rope(rope, 0.5, 20, 20);
 
 	glutSwapBuffers();
 }
 
+bool rope_anchor=false;
 void nextTimestep(int time){
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 	float internalTimeStep = 1. / 240.f, deltaTime = 1. / 60.f;
@@ -142,12 +144,30 @@ void nextTimestep(int time){
 	//skel->setTransform();
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
 
-		btTransform trans = jump_building->getWorldTransform();
+		btTransform trans = skel->getCollisionObject("pelvis")->m_obj->getWorldTransform();
 
 		float trans_x = float(trans.getOrigin().getX());
 		float trans_y = float(trans.getOrigin().getY());
 		float trans_z = float(trans.getOrigin().getZ());
-		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+		printf("world pos object root = %f,%f,%f\n", trans_x, trans_y, trans_z);
+
+	if(!rope_anchor){
+		rope->m_nodes[rope->m_nodes.size()-1].m_x = trans.getOrigin();
+		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, skel->getCollisionObject("pelvis")->m_obj);
+
+		cloak->translate(btVector3(0.0,0.0,0.5));
+		btRigidBody* lclavicle = skel->getCollisionObject("lclavicle")->m_obj;
+		trans = lclavicle->getWorldTransform();
+		//cloak->m_nodes[5*9].m_x = trans.getOrigin() + btVector3(0.5,1,-1);
+		cloak->appendDeformableAnchor(5*9, lclavicle);
+
+		btRigidBody* rclavicle = skel->getCollisionObject("rclavicle")->m_obj;
+		trans = rclavicle->getWorldTransform();
+		//cloak->m_nodes[5*9+4].m_x = trans.getOrigin() + btVector3(-0.5, 0.8,-1);
+		cloak->appendDeformableAnchor(5*9+4, rclavicle);
+
+		rope_anchor=true;
+	}
 
 	glutPostRedisplay();
 }
@@ -201,6 +221,7 @@ void init_gl(int argc, char* argv[]){
 void make_rigid_body(SkeletonPtr skel){
 	// TODO
 	printf("make rigid body called\n");
+	skel->turnOffKinematics();
 }
 
 int main(int argc, char* argv[]){
@@ -220,32 +241,6 @@ int main(int argc, char* argv[]){
 	}
 
 	{
-		rope = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(5, 80, -8), btVector3(5, 80, -3),10, 1);
-		rope->getCollisionShape()->setMargin(0.1);
-		rope->m_cfg.kKHR = 1; // collision hardness with kinematic objects
-		rope->m_cfg.kCHR = 1; // collision hardness with rigid body
-		rope->m_cfg.kDF = 2;
-		rope->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
-
-		rope->m_materials[0]->m_kLST = 0.5;
-
-		rope->setTotalMass(5.f);
-		g_dynamicsWorld->addSoftBody(rope);
-
-		btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
-		g_dynamicsWorld->addForce(rope, mass_spring);
-
-		btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
-		g_dynamicsWorld->addForce(rope, gravity_force);
-	
-		btBoxShape *box = new btBoxShape(btVector3(btScalar(0.5), btScalar(0.5), btScalar(0.5)));
-
-		btTransform startTransform;
-		startTransform.setIdentity();
-
-		btScalar mass(100.0f);
-
-		startTransform.setOrigin(btVector3(5, 80.5, -3));
 		//invisible_box = create_rigid_body(mass, startTransform, box);
 
 		// Deactivate collision for box.
@@ -285,6 +280,11 @@ int main(int argc, char* argv[]){
 		// skel->location = Eigen::Vector3d(5, 80.5, -3);
 		// skel->setTransform();
 	}
+	// Ground
+	{
+		ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
+	}
+	// Jump building
 	{
 		jump_building = create_jump_building();
 		btTransform trans = jump_building->getWorldTransform();
@@ -292,17 +292,38 @@ int main(int argc, char* argv[]){
 		float trans_x = float(trans.getOrigin().getX());
 		float trans_y = float(trans.getOrigin().getY());
 		float trans_z = float(trans.getOrigin().getZ());
+//		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+	}
+	// Human
+	{
+		Eigen::Vector3d location = Eigen::Vector3d(0, 80, -65);
+		TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
+		skel = SkeletonPtr(new Skeleton(doc));
+		MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
+		player = GraphPlayerPtr(new GraphPlayer(skel, graph, location));
+	}
+	// Rope
+	{
+		CollisionObjectPtr root = skel->getCollisionObject("pelvis");
+		btTransform root_origin = root->m_obj->getWorldTransform();
+
+		float trans_x = float(root_origin.getOrigin().getX());
+		float trans_y = float(root_origin.getOrigin().getY());
+		float trans_z = float(root_origin.getOrigin().getZ());
 		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+		rope = create_rope(btVector3(0, 85,-60),btVector3(0,85,-55));
+
+		//rope->appendDeformableAnchor(rope->m_nodes.size() - 1, root->m_obj);
 
 	}
 
+	// Cloak
+	{
+		cloak = create_cloak();
+	}
+
 //*
-	Eigen::Vector3d location = Eigen::Vector3d(0, 0, 0);
-	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
-	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
-	skel = SkeletonPtr(new Skeleton(doc));
-	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
-	player = GraphPlayerPtr(new GraphPlayer(skel, graph, location));
+	
 // */
 	glutMainLoop();
 
