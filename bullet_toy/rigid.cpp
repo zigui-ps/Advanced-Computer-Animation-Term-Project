@@ -263,11 +263,12 @@ int main(int argc, char* argv[]){
 		box2->setAngularVelocity(btVector3(10, 0, 0));
 	}
 //*
+	Eigen::Vector3d location = Eigen::Vector3d(-10, 10, -10);
 	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
 	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
 	skel = SkeletonPtr(new Skeleton(doc));
 	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
-	player = GraphPlayerPtr(new GraphPlayer(skel, graph));
+	player = GraphPlayerPtr(new GraphPlayer(skel, graph, location));
 // */
 	glutMainLoop();
 
