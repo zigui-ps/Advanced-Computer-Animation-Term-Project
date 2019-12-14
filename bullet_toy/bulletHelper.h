@@ -15,5 +15,6 @@ void init_bullet_world();
 btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollisionShape* shape, bool isKinematics = false);
 
 void draw_soft_body(btSoftBody* psb);
+void draw_rope(btSoftBody* psb, double R, int c1, int c2);
 
 #endif //__BULLET_HELPER_H__

@@ -1,6 +1,7 @@
 #include "bulletHelper.h"
 #include "openglHelper.h"
 #include <map>
+#include <vector>
 
 btDeformableMultiBodyDynamicsWorld* g_dynamicsWorld;
 
@@ -38,6 +39,54 @@ btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollision
 		}
 		g_dynamicsWorld->addRigidBody(body);
 		return body;
+}
+
+void get_spline(btVector3 p0, btVector3 p1, btVector3 p2, btVector3 p3, std::vector<btVector3> &points, int cnt){
+	for(int i = 0; i <= cnt; i++){
+		double t = i / (double)cnt;
+		points.push_back((1-t)*(1-t)*(1-t)*p0 + 3*t*(1-t)*(1-t)*p1 + 3*t*t*(1-t)*p2 + t*t*t*p3);
+	}
+}
+
+void draw_rope(btSoftBody* psb, double R, int c1, int c2){
+	const double PI = acos(-1);
+	int n = psb->m_nodes.size();
+	std::vector<btVector3> points;
+	for(int i = 0; i+1 < psb->m_nodes.size(); i++){
+		btVector3 p0 = psb->m_nodes[i].m_x, p1 = psb->m_nodes[i+1].m_x;
+		btVector3 t0, t1;
+		t0 = i == 0 ? (p1 - p0) : (p1 - psb->m_nodes[i-1].m_x) * 0.5;
+		t1 = i+2 == psb->m_nodes.size() ? (p1 - p0) : (psb->m_nodes[i+2].m_x - p0) * 0.5;
+		get_spline(p0, p0 + t0/3, p1 - t1/3, p1, points, c1);
+		points.pop_back();
+	}
+	btVector3 up;
+	up = (points[0] - points[1]).cross(btVector3(0, 0, 1));
+	if(up.norm() < 1e-10) up = (points[0] - points[1]).cross(btVector3(0, 1, 0));
+	up = up.normalized();
+
+	for(int i = 0; i+1 < points.size(); i++){
+		btVector3 n, m, p0 = points[i], p1 = points[i+1], up2;
+		n = i == 0? points[i+1] - points[i] : points[i+1] - points[i-1];
+		m = i+2 == points.size()? points[i+1] - points[i] : points[i+2] - points[i];
+		n = n.normalized(); m = m.normalized();
+		up2 = (up - m.dot(up2) * m).normalized();
+
+		btVector3 l = up.cross(n), l2 = up2.cross(m);
+
+		glBegin(GL_QUAD_STRIP);
+		for(int i = 0; i <= c2; i++){
+			double rad = PI * 2 / c2 * i;
+			btVector3 d0 = l * cos(rad) + up * sin(rad), q0 = p0 + d0 * R;
+			btVector3 d1 = l2 * cos(rad) + up2 * sin(rad), q1 = p1 + d1 * R;
+			glNormal3d(d0.x(), d0.y(), d0.z());
+			glVertex3d(q0.x(), q0.y(), q0.z());
+			glNormal3d(d1.x(), d1.y(), d1.z());
+			glVertex3d(q1.x(), q1.y(), q1.z());
+		}
+		glEnd();
+		up = up2;
+	}
 }
 
 void draw_soft_body(btSoftBody* psb){
