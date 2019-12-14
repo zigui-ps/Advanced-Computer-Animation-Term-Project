@@ -11,6 +11,7 @@ class MotionStatus{
 	public:
 		virtual SkeletonPosePtr getPosition() = 0;
 		virtual MotionStatusPtr step(MotionStatusPtr self) = 0;
+		virtual bool isTerminate() = 0;
 };
 
 class MotionStatusGraph : public MotionStatus{
@@ -22,6 +23,7 @@ class MotionStatusGraph : public MotionStatus{
 		
 		virtual SkeletonPosePtr getPosition();
 		virtual MotionStatusPtr step(MotionStatusPtr self);
+		virtual bool isTerminate();
 };
 
 class MotionStatusOffset : public MotionStatus{
@@ -33,6 +35,7 @@ class MotionStatusOffset : public MotionStatus{
 		
 		virtual SkeletonPosePtr getPosition();
 		virtual MotionStatusPtr step(MotionStatusPtr self);
+		virtual bool isTerminate();
 };
 
 using MotionStatusGraphPtr = std::shared_ptr<MotionStatusGraph>;

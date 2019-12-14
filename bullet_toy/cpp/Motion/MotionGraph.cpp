@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
- MotionGraph::MotionGraphEdge::MotionGraphEdge(int db, int nxt, int key):db(db), nxt(nxt), key(key){}
+MotionGraph::MotionGraphEdge::MotionGraphEdge(int db, int nxt, int key):db(db), nxt(nxt), key(key){}
 
 MotionGraph::MotionGraph(std::string infoFile) : key(0){
 	std::ifstream info(infoFile);
@@ -57,6 +57,10 @@ bool MotionGraph::step(int &node, int &edge, int &frame){
 	MotionGraphEdge currentEdge = graph[node][edge];
 	if (motionDB->motionData[currentEdge.db].size() == frame + 1){
 		node = currentEdge.nxt;
+		if(graph[node].size() == 0){
+			edge = frame = -1;
+			return false;
+		}
 		MotionGraphEdge nextEdge = graph[node][0]; edge = 0;
 		for (int i = 1; i < graph[node].size(); i++){
 			if(graph[node][i].key == key){

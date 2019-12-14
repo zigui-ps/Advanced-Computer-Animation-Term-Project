@@ -2,6 +2,8 @@
 #include "Render/GLfunctions.h"
 #include "Skeleton/Helper.h"
 
+extern void make_rigid_body(SkeletonPtr skel);
+
 BVHPlayer::BVHPlayer(SkeletonPtr skel, MotionDBPtr motionDB):skel(skel), motionDB(motionDB),
 	db(-1){
 }
@@ -137,7 +139,12 @@ void GraphPlayer::display(){
 }
 
 void GraphPlayer::nextTimestep(int time){
+	if(status->isTerminate()) return;
 	status = status->step(status);
+	if(status->isTerminate()){
+		make_rigid_body(skel);
+		return;
+	}
 	SkeletonPosePtr pose = status->getPosition();
 	
 	skel->location = pose->location + Eigen::Vector3d(0, Yoff, 0);
