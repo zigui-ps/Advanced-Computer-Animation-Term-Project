@@ -100,25 +100,25 @@ void display(void)
 	g_dynamicsWorld->debugDrawWorld();
 
 
-	btRigidBody* body = invisible_box;
-	btTransform trans;
+	// btRigidBody* body = invisible_box;
+	// btTransform trans;
 
-	trans = body->getWorldTransform();
+	// trans = body->getWorldTransform();
 
-	float trans_x = float(trans.getOrigin().getX());
-	float trans_y = float(trans.getOrigin().getY());
-	float trans_z = float(trans.getOrigin().getZ());
+	// float trans_x = float(trans.getOrigin().getX());
+	// float trans_y = float(trans.getOrigin().getY());
+	// float trans_z = float(trans.getOrigin().getZ());
 
-	//printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+	// //printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	double m[16];
-	trans.getOpenGLMatrix(m);
-	glMultMatrixd(m);
+	// glMatrixMode(GL_MODELVIEW);
+	// glPushMatrix();
+	// double m[16];
+	// trans.getOpenGLMatrix(m);
+	// glMultMatrixd(m);
 
-	draw_box(0.5,0.5,0.5);
-	glPopMatrix();
+	// draw_box(0.5,0.5,0.5);
+	// glPopMatrix();
 
 	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
 	{
@@ -147,12 +147,12 @@ void nextTimestep(int time){
 	t.setOrigin(btVector3(((float)rand()/RAND_MAX) * 20, 0, 0));
 	//box1->setTransform(t);
 
-	player->nextTimestep(time);
-	btTransform trans = invisible_box->getWorldTransform();
+	//player->nextTimestep(time);
+	// btTransform trans = invisible_box->getWorldTransform();
 
-	skel->location = Eigen::Vector3d(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
-	skel->root->jointTransform = Eigen::Quaterniond::Identity();
-	skel->setTransform();
+	// skel->location = Eigen::Vector3d(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
+	//skel->root->jointTransform = Eigen::Quaterniond::Identity();
+	//skel->setTransform();
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
 
 	glutPostRedisplay();
@@ -214,18 +214,7 @@ int main(int argc, char* argv[]){
 
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
-	// create a ground
-	btBoxShape* groundShape = new btBoxShape(btVector3(btScalar(500.), btScalar(50.), btScalar(500.)));
 
-	btTransform groundTransform;
-	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(0,-50, 0));
-
-	{
-		btScalar mass(0.);
-		create_rigid_body(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
-
-	}
 
 	// {
 	// 	// btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
@@ -265,29 +254,49 @@ int main(int argc, char* argv[]){
 		btTransform startTransform;
 		startTransform.setIdentity();
 
-		btScalar mass(10.0f);
+		btScalar mass(100.0f);
 
 		startTransform.setOrigin(btVector3(5, 80.5, -3));
-		invisible_box = create_rigid_body(mass, startTransform, box);
+		//invisible_box = create_rigid_body(mass, startTransform, box);
 
 		// Deactivate collision for box.
-		invisible_box->setCollisionFlags(invisible_box->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		//invisible_box->setCollisionFlags(invisible_box->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
-		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, invisible_box);
+		//rope->appendDeformableAnchor(rope->m_nodes.size() - 1, invisible_box);
 
-		invisible_box->setLinearVelocity(btVector3(0, 2, 0));
-		invisible_box->setAngularVelocity(btVector3(10, 0, 0));
-									printf("here\n");
+		//invisible_box->setLinearVelocity(btVector3(0, 2, 0));
+		//invisible_box->setAngularVelocity(btVector3(10, 0, 0));
 
+		ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
+		TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
+		skel = SkeletonPtr(new Skeleton(doc));
+		skel->turnOffKinematics();
+		CollisionObjectPtr coll_obj = skel->getCollisionObject("pelvis");
+		btRigidBody* body = coll_obj->m_obj;
+		
+		skel->location = Eigen::Vector3d(5, 80.5, -3);
+		skel->setTransform();
+
+		btTransform trans = body->getWorldTransform();
+
+		float trans_x = float(trans.getOrigin().getX());
+		float trans_y = float(trans.getOrigin().getY());
+		float trans_z = float(trans.getOrigin().getZ());
+
+		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
+
+
+		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+
+
+
+		MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
+		player = GraphPlayerPtr(new GraphPlayer(skel, graph));
+
+		skel->location = Eigen::Vector3d(5, 80.5, -3);
+		skel->setTransform();
 	}
-//*
-	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
-	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
-	skel = SkeletonPtr(new Skeleton(doc));
-	skel->turnOffKinematics();
-	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
-	player = GraphPlayerPtr(new GraphPlayer(skel, graph));
-// */
+
 	glutMainLoop();
 
 	return 0;

@@ -221,3 +221,9 @@ void Skeleton::turnOffKinematics(){
 		}
 	}
 }
+
+CollisionObjectPtr Skeleton::getCollisionObject(std::string name){
+	SkeletonNodePtr node = this->nodeName[name];
+	// Just return only one collisionobject
+	return node->shapeList[0];
+}
