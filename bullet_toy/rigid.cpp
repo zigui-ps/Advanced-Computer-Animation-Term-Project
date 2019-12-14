@@ -193,6 +193,11 @@ void init_gl(int argc, char* argv[]){
 
 }
 
+void make_rigid_body(SkeletonPtr skel){
+	// TODO
+	printf("make rigid body called\n");
+}
+
 int main(int argc, char* argv[]){
 	init_gl(argc, argv);
 
@@ -287,7 +292,7 @@ int main(int argc, char* argv[]){
 	}
 
 //*
-	Eigen::Vector3d location = Eigen::Vector3d(-10, 10, -10);
+	Eigen::Vector3d location = Eigen::Vector3d(0, 0, 0);
 	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
 	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
 	skel = SkeletonPtr(new Skeleton(doc));
