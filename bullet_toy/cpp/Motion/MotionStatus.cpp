@@ -36,6 +36,10 @@ MotionStatusPtr MotionStatusGraph::step(MotionStatusPtr self){
 	}
 }
 
+bool MotionStatusGraph::isTerminate(){
+	return edge == -1 && frame == -1;
+}
+
 // Offset
 
 MotionStatusOffset::MotionStatusOffset(MotionStatusPtr to, SkeletonPosePtr diff):
@@ -64,4 +68,8 @@ MotionStatusPtr MotionStatusOffset::step(MotionStatusPtr self){
 	to = to->step(to);
 	if(currentFrame >= BLENDINGFRAME) return to;
 	else return self;
+}
+
+bool MotionStatusOffset::isTerminate(){
+	return to->isTerminate();
 }
