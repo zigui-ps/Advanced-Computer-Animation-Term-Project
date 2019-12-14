@@ -143,6 +143,7 @@ void GraphPlayer::nextTimestep(int time){
 	skel->location = pose->location + Eigen::Vector3d(0, Yoff, 0);
 	for(int i = 0; i < skel->nodeList.size(); i++)
 		skel->nodeList[i]->jointTransform = pose->joint[i];
+	skel->setTransform();
 }
 
 void GraphPlayer::keyboard(unsigned char key, int x, int y){
