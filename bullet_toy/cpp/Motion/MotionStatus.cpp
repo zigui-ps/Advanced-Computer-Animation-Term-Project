@@ -46,7 +46,9 @@ SkeletonPosePtr MotionStatusOffset::getPosition(){
 	SkeletonPosePtr result = to->getPosition();
 	if(currentFrame >= BLENDINGFRAME) return result;
 
-	double rate = std::clamp(1 - currentFrame / (double)BLENDINGFRAME, 0.0, 1.0);
+	double rate = 1 - currentFrame / (double)BLENDINGFRAME;
+	if(rate < 0.0) rate = 0.0;
+	else if(rate>1.0) rate = 1.0;
 	rate = (sin(rate*PI - PI/2) + 1) / 2;
 
 	// position
