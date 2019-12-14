@@ -60,6 +60,7 @@ public:
 	void setTransform();
 	void inverseKinematics(const std::vector<IKConstraint> &constraint);
 	Eigen::MatrixXd getJacobian(const std::vector<IKConstraint> &constraint);
+	void turnOffKinematics();
 
 	void display();
 };

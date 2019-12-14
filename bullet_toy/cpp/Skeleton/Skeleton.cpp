@@ -209,3 +209,15 @@ std::ostream& operator<<(std::ostream& os, const SkeletonPose& dt)
 	for(auto c : dt.joint) std::cout << c.w() << " " << c.vec() << "\n";
     return os;
 }
+
+void Skeleton::turnOffKinematics(){
+	for(int i = 0; i < nodeList.size(); i++){
+		auto cur = nodeList[i];
+		auto shape_list = cur->shapeList;
+		for(auto shape : shape_list){
+			auto obj = shape->m_obj;
+			obj->setCollisionFlags(obj->getCollisionFlags() & ~btCollisionObject::CF_KINEMATIC_OBJECT);
+
+		}
+	}
+}

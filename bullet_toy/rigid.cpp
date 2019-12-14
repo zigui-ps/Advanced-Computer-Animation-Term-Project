@@ -220,9 +220,11 @@ int main(int argc, char* argv[]){
 	btTransform groundTransform;
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0,-50, 0));
+
 	{
 		btScalar mass(0.);
 		create_rigid_body(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
+
 	}
 
 	// {
@@ -240,26 +242,15 @@ int main(int argc, char* argv[]){
 	// 	box1->createCollisionObject(0,10,0, 5,5,5);
 	// }
 	{
-<<<<<<< HEAD
-		btSoftBody* psb = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(5, 80, -8), btVector3(5, 80, -3),10, 1);
-		psb->getCollisionShape()->setMargin(0.1);
-		psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
-		psb->m_cfg.kCHR = 1; // collision hardness with rigid body
-		psb->m_cfg.kDF = 2;
-		psb->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
-
-		psb->m_materials[0]->m_kLST = 0.5;
-=======
-		rope = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(-500, 55, 50), btVector3(-400, 55, 50),10, 1);
-		rope->getCollisionShape()->setMargin(1);
+		rope = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(5, 80, -8), btVector3(5, 80, -3),10, 1);
+		rope->getCollisionShape()->setMargin(0.1);
 		rope->m_cfg.kKHR = 1; // collision hardness with kinematic objects
 		rope->m_cfg.kCHR = 1; // collision hardness with rigid body
 		rope->m_cfg.kDF = 2;
 		rope->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
 
-		rope->m_materials[0]->m_kLST = 0;
->>>>>>> master
-		
+		rope->m_materials[0]->m_kLST = 0.5;
+
 		rope->setTotalMass(5.f);
 		g_dynamicsWorld->addSoftBody(rope);
 
@@ -276,27 +267,24 @@ int main(int argc, char* argv[]){
 
 		btScalar mass(10.0f);
 
-<<<<<<< HEAD
 		startTransform.setOrigin(btVector3(5, 80.5, -3));
 		invisible_box = create_rigid_body(mass, startTransform, box);
 
 		// Deactivate collision for box.
 		invisible_box->setCollisionFlags(invisible_box->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
-		psb->appendDeformableAnchor(psb->m_nodes.size() - 1, invisible_box);
-=======
-		startTransform.setOrigin(btVector3(-400,50,50));
-		box2 = create_rigid_body(mass, startTransform, box);
-		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, box2);
->>>>>>> master
+		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, invisible_box);
 
 		invisible_box->setLinearVelocity(btVector3(0, 2, 0));
 		invisible_box->setAngularVelocity(btVector3(10, 0, 0));
+									printf("here\n");
+
 	}
 //*
 	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
 	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
 	skel = SkeletonPtr(new Skeleton(doc));
+	skel->turnOffKinematics();
 	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
 	player = GraphPlayerPtr(new GraphPlayer(skel, graph));
 // */
