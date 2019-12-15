@@ -121,7 +121,7 @@ GroundShape::GroundShape(int n, int m, double x, double z):
     // btBoxShape *box = new btBoxShape(btVector3(n*x*2, 10, m*z*2));
     // btTransform m_trans; m_trans.setOrigin(btVector3(0, -5, 0));
     // m_obj = create_rigid_body(0.0, m_trans, box, false);
-	m_obj = create_ground(n*x, 5, m*z);
+	//m_obj = create_ground(n*x, 5, m*z);
 }
 
 void GroundShape::display()

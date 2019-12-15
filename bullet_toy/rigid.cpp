@@ -222,8 +222,7 @@ void make_rigid_body(SkeletonPtr skel){
 	// TODO
 	printf("make rigid body called\n");
 
-	skel->turnOffKinematics();
-
+	btVector3 f_v;
 	btCompoundShape* compoundShape = new btCompoundShape();
 
 	btScalar* masses = new btScalar[skel->nodeList.size()];
@@ -233,38 +232,47 @@ void make_rigid_body(SkeletonPtr skel){
 		for(auto shape : shape_list){
 			auto obj = shape->m_obj;
 			btTransform trans = obj->getWorldTransform();
-
-			float trans_x = float(trans.getOrigin().getX());
-			float trans_y = float(trans.getOrigin().getY());
-			float trans_z = float(trans.getOrigin().getZ());
-			printf("object %d = %f,%f,%f\n", i,  trans_x, trans_y, trans_z);
-
 			
 			compoundShape->addChildShape(trans, obj->getCollisionShape());
+
+			if(i==0){// pelvis
+			f_v = obj->getLinearVelocity();
+			}
 		}
-		masses[i] = 1;
+		masses[i] = 1; // how to get obj mass? // TODO: change to obj->m_mass;
 	}
 
 	btTransform principal;
 	principal.setIdentity();
 
-	btScalar mass(50.0f); // maybe sumup masses
-	//rigidbody is dynamic if and only if mass is non zero, otherwise static
-	bool isDynamic = (mass != 0.f);
+	btScalar mass(15.0f); // maybe sumup masses
+	
 
-	btVector3 localInertia(0, 0, 0);
-	if (isDynamic)
-		compoundShape->calculateLocalInertia(mass, localInertia);
 
-	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(principal);
+	// Remove
+	for(int i = 0; i < skel->nodeList.size(); i++){
+		auto cur = skel->nodeList[i];
+		auto shape_list = cur->shapeList;
+		for(auto shape : shape_list){
+			auto obj = shape->m_obj;
+			g_dynamicsWorld->removeCollisionObject(obj);
+			delete obj;		
+		}
+	}
 
-	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, myMotionState, compoundShape, localInertia);
-	btRigidBody* body = new btRigidBody(cInfo);
+	btRigidBody* body = create_rigid_body(mass, principal, compoundShape);
+	body->setLinearVelocity(f_v);
 
-	g_dynamicsWorld->addRigidBody(body);
+	//g_dynamicsWorld->addRigidBody(body);
 
-	//skel->turnOffKinematics();
+
+	//rope->m_nodes[rope->m_nodes.size()-1].m_x = trans.getOrigin();
+	rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
+
+	cloak->m_cfg.kCHR = 0; // collision hardness with rigid body
+	cloak->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_SS; // collision between soft and rigid makes weird.
+	cloak->appendDeformableAnchor(5*9, body);
+	cloak->appendDeformableAnchor(5*9+4, body);
 }
 
 int main(int argc, char* argv[]){
@@ -329,12 +337,12 @@ int main(int argc, char* argv[]){
 	}
 	// Jump building
 	{
-		jump_building = create_jump_building();
-		btTransform trans = jump_building->getWorldTransform();
+		// jump_building = create_jump_building();
+		// btTransform trans = jump_building->getWorldTransform();
 
-		float trans_x = float(trans.getOrigin().getX());
-		float trans_y = float(trans.getOrigin().getY());
-		float trans_z = float(trans.getOrigin().getZ());
+		// float trans_x = float(trans.getOrigin().getX());
+		// float trans_y = float(trans.getOrigin().getY());
+		// float trans_z = float(trans.getOrigin().getZ());
 //		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 	}
 	// Human

@@ -105,9 +105,11 @@ btSoftBody* create_rope(btVector3 from,btVector3 to){
 	rope->m_cfg.kKHR = 1; // collision hardness with kinematic objects
 	rope->m_cfg.kCHR = 1; // collision hardness with rigid body
 	rope->m_cfg.kDF = 2;
-	rope->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+	rope->m_cfg.drag =0.002;
+	//rope->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+	rope->m_cfg.collisions = btSoftBody::fCollision::RVSmask;
 
-	rope->m_materials[0]->m_kLST = 0.5;
+	rope->m_materials[0]->m_kLST = 1;
 
 	rope->setTotalMass(5.f);
 	g_dynamicsWorld->addSoftBody(rope);
@@ -133,7 +135,7 @@ btSoftBody* create_cloak(){
 			btVector3(+s/2, h, +s-56), r/2, r, 0, true);
 	psb->getCollisionShape()->setMargin(0.1);
 	psb->generateBendingConstraints(2);
-	psb->setTotalMass((btScalar)5.);
+	psb->setTotalMass((btScalar)1.);
 	psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
 	psb->m_cfg.kCHR = 1; // collision hardness with rigid body
 	psb->m_cfg.kDF = 2;
