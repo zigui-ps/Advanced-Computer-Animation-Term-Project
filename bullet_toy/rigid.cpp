@@ -211,7 +211,7 @@ void init_gl(int argc, char* argv[]){
 	printf(" - A: Make the camera go left.\n");
 	printf(" - S: Make the camera go backward.\n");
 	printf(" - D: Make the camera go right.\n");
-	printf(" - Z: Make the camera go up.\n");
+	printf(" - Zcompound2: Make the camera go up.\n");
 	printf(" - X: Make the camera go down.\n");
 	printf(" - MOUSE RIGHT CLICK & DRAG: Rotate the camera.\n");
 	printf("==================================================\n");
@@ -221,7 +221,50 @@ void init_gl(int argc, char* argv[]){
 void make_rigid_body(SkeletonPtr skel){
 	// TODO
 	printf("make rigid body called\n");
+
 	skel->turnOffKinematics();
+
+	btCompoundShape* compoundShape = new btCompoundShape();
+
+	btScalar* masses = new btScalar[skel->nodeList.size()];
+	for(int i = 0; i < skel->nodeList.size(); i++){
+		auto cur = skel->nodeList[i];
+		auto shape_list = cur->shapeList;
+		for(auto shape : shape_list){
+			auto obj = shape->m_obj;
+			btTransform trans = obj->getWorldTransform();
+
+			float trans_x = float(trans.getOrigin().getX());
+			float trans_y = float(trans.getOrigin().getY());
+			float trans_z = float(trans.getOrigin().getZ());
+			printf("object %d = %f,%f,%f\n", i,  trans_x, trans_y, trans_z);
+
+			
+			compoundShape->addChildShape(trans, obj->getCollisionShape());
+		}
+		masses[i] = 1;
+	}
+
+	btTransform principal;
+	principal.setIdentity();
+
+	btScalar mass(50.0f); // maybe sumup masses
+	//rigidbody is dynamic if and only if mass is non zero, otherwise static
+	bool isDynamic = (mass != 0.f);
+
+	btVector3 localInertia(0, 0, 0);
+	if (isDynamic)
+		compoundShape->calculateLocalInertia(mass, localInertia);
+
+	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(principal);
+
+	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, myMotionState, compoundShape, localInertia);
+	btRigidBody* body = new btRigidBody(cInfo);
+
+	g_dynamicsWorld->addRigidBody(body);
+
+	//skel->turnOffKinematics();
 }
 
 int main(int argc, char* argv[]){
