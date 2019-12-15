@@ -44,10 +44,12 @@ void mouse_drag_callback(int x, int y){
     mouse_pos_y = y;
 }
 
-
+extern bool enable;
 void keyboard_callback(unsigned char key, int x, int y){
 	player->keyboard(key, x, y);
     switch(key){
+				case '-':
+						enable = !enable;
         case 'w':
         case 'W':
             camera_list[cur_camera_idx]->ProcessKeyboard(FORWARD, 0.01);

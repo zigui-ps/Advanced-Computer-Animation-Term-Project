@@ -3,20 +3,21 @@
 #include <map>
 #include <vector>
 
-btDeformableMultiBodyDynamicsWorld* g_dynamicsWorld;
+btSoftRigidDynamicsWorld* g_dynamicsWorld;
 
 void init_bullet_world(){
     auto m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
 	auto m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 	auto m_broadphase = new btDbvtBroadphase();
-	btDeformableBodySolver* deformableBodySolver = new btDeformableBodySolver();
-	btDeformableMultiBodyConstraintSolver* sol = new btDeformableMultiBodyConstraintSolver();
-	sol->setDeformableSolver(deformableBodySolver);
-	auto m_solver = sol;
+	//btDeformableBodySolver* deformableBodySolver = new btDeformableBodySolver();
+	//btDeformableMultiBodyConstraintSolver* sol = new btDeformableMultiBodyConstraintSolver();
+	//sol->setDeformableSolver(deformableBodySolver);
+	auto m_solver = new btSequentialImpulseConstraintSolver;
 
-	g_dynamicsWorld = new btDeformableMultiBodyDynamicsWorld(m_dispatcher, m_broadphase, sol, m_collisionConfiguration, deformableBodySolver);
+	g_dynamicsWorld = new btSoftRigidDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
 
     g_dynamicsWorld->setGravity(btVector3(0,-10,0));
+		g_dynamicsWorld->getWorldInfo().m_sparsesdf.Initialize();
 
     printf("Init bullet world\n");
 }
@@ -106,19 +107,23 @@ btSoftBody* create_rope(btVector3 from,btVector3 to){
 	rope->m_cfg.kCHR = 1; // collision hardness with rigid body
 	rope->m_cfg.kDF = 2;
 	rope->m_cfg.drag =0.002;
-	//rope->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+	//rope->m_cfg.kDF=1;
+	//rope->m_cfg.kSRHR_CL = 1;
+	//rope->m_cfg.kSR_SPLT_CL = 0;
+	//rope->m_cfg.collisions = btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
 	rope->m_cfg.collisions = btSoftBody::fCollision::RVSmask;
+	//rope->generateClusters(64);
 
 	rope->m_materials[0]->m_kLST = 1;
 
 	rope->setTotalMass(5.f);
 	g_dynamicsWorld->addSoftBody(rope);
 
-	btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
-	g_dynamicsWorld->addForce(rope, mass_spring);
+	//btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
+	//g_dynamicsWorld->addForce(rope, mass_spring);
 
-	btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
-	g_dynamicsWorld->addForce(rope, gravity_force);
+	//btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
+	//g_dynamicsWorld->addForce(rope, gravity_force);
 
 	return rope;
 }
@@ -136,19 +141,23 @@ btSoftBody* create_cloak(){
 	psb->getCollisionShape()->setMargin(0.1);
 	psb->generateBendingConstraints(2);
 	psb->setTotalMass((btScalar)1.);
-	psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
-	psb->m_cfg.kCHR = 1; // collision hardness with rigid body
-	psb->m_cfg.kDF = 2;
-	psb->m_cfg.drag =0.01;
-	psb->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+	//psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
+	//psb->m_cfg.kCHR = 1; // collision hardness with rigid body
+	//psb->m_cfg.kDF = 2;
+	//psb->m_cfg.drag =0.01;
+	psb->m_cfg.kDF = 1;
+	psb->m_cfg.kSRHR_CL = 1;
+	psb->m_cfg.kSR_SPLT_CL = 0;
+	psb->generateClusters(64);
+	psb->m_cfg.collisions = btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
 	g_dynamicsWorld->addSoftBody(psb);
 
-	btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
-	g_dynamicsWorld->addForce(psb, mass_spring);
+	//btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
+	//g_dynamicsWorld->addForce(psb, mass_spring);
 
-	btVector3 gravity = btVector3(0, -10, 0);
-	btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(gravity);
-	g_dynamicsWorld->addForce(psb, gravity_force);
+	//btVector3 gravity = btVector3(0, -10, 0);
+	//btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(gravity);
+	//g_dynamicsWorld->addForce(psb, gravity_force);
 
 	return psb;
 }
