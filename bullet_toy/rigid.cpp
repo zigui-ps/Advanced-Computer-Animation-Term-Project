@@ -104,7 +104,7 @@ void display(void)
 	draw_soft_body(cloak);
 	skel->display();
 	ground->display();
-	draw_rope(rope, 0.5, 20, 20);
+	//draw_rope(rope, 0.5, 20, 20);
 
 	glutSwapBuffers();
 }
@@ -112,9 +112,10 @@ void display(void)
 bool rope_anchor=false;
 void nextTimestep(int time){
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
-	float internalTimeStep = 1. / 600.f, deltaTime = 1. / 60.f;
+	float internalTimeStep = 1. / 6000.f, deltaTime = 1. / 600.f;
 
-	player->nextTimestep(time);
+	static int cnt = 0;
+	if(cnt++%10 == 0) player->nextTimestep(time);
 	// btTransform trans = invisible_box->getWorldTransform();
 
 	// skel->location = Eigen::Vector3d(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
@@ -137,9 +138,27 @@ void nextTimestep(int time){
 		printf("world pos object root = %f,%f,%f\n", trans_x, trans_y, trans_z);
 
 	if(!rope_anchor){
+
+		rope = create_rope(btVector3(0, 85,-10),btVector3(100,85,-60));
+		for(int i=0;i<rope->m_nodes.size()-1;i++){
+			trans_x = rope->m_nodes[i].m_q.getX();
+			trans_y = rope->m_nodes[i].m_q.getY();
+			trans_z = rope->m_nodes[i].m_q.getZ();
+
+			printf("before = %f,%f,%f\n", trans_x, trans_y, trans_z);
+		}
 		rope->m_nodes[rope->m_nodes.size()-1].m_x = trans.getOrigin();
 		rope->appendAnchor(rope->m_nodes.size() - 1, skel->getCollisionObject("pelvis")->m_obj);
+		for(int i=0;i<rope->m_nodes.size()-1;i++){
+			rope->m_nodes[i].m_v = btVector3(0,0,0);
+			trans_x = rope->m_nodes[i].m_x.getX();
+			trans_y = rope->m_nodes[i].m_x.getY();
+			trans_z = rope->m_nodes[i].m_x.getZ();
 
+			printf("after = %f,%f,%f\n", trans_x, trans_y, trans_z);
+		
+		}
+	
 		cloak->translate(btVector3(0.0,0.0,0.5));
 		btRigidBody* lclavicle = skel->getCollisionObject("lclavicle")->m_obj;
 		trans = lclavicle->getWorldTransform();
@@ -232,7 +251,7 @@ void make_rigid_body(SkeletonPtr skel){
 	btTransform principal;
 	principal.setIdentity();
 
-	btScalar mass(15.0f); // maybe sumup masses
+	btScalar mass(100.0f); // maybe sumup masses
 	
 
 
@@ -309,7 +328,7 @@ int main(int argc, char* argv[]){
 		float trans_y = float(root_origin.getOrigin().getY());
 		float trans_z = float(root_origin.getOrigin().getZ());
 		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
-		rope = create_rope(btVector3(0, 85,-60),btVector3(0,85,-55));
+		//rope = create_rope(btVector3(0, 85,-60),btVector3(100,85,-60));
 
 		//rope->appendDeformableAnchor(rope->m_nodes.size() - 1, root->m_obj);
 

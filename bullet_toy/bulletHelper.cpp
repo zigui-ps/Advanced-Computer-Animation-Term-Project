@@ -17,6 +17,7 @@ void init_bullet_world(){
 	g_dynamicsWorld = new btSoftRigidDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
 
     g_dynamicsWorld->setGravity(btVector3(0,-10,0));
+		//g_dynamicsWorld->getWorldInfo().air_density =1.0f;
 		g_dynamicsWorld->getWorldInfo().m_sparsesdf.Initialize();
 
     printf("Init bullet world\n");
@@ -39,6 +40,7 @@ btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollision
 			body->setActivationState( DISABLE_DEACTIVATION );
 		}
 		g_dynamicsWorld->addRigidBody(body);
+		body->setFriction(1);
 		return body;
 }
 
@@ -101,22 +103,24 @@ btRigidBody* create_jump_building(){
 btSoftBody* create_rope(btVector3 from,btVector3 to){
 	
 
-	btSoftBody* rope = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),from, to, 50, 1);
-	rope->getCollisionShape()->setMargin(0.1);
-	rope->m_cfg.kKHR = 1; // collision hardness with kinematic objects
-	rope->m_cfg.kCHR = 1; // collision hardness with rigid body
-	rope->m_cfg.kDF = 2;
-	rope->m_cfg.drag =0.002;
+	btSoftBody* rope = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),from, to, 20, 1);
+	rope->getCollisionShape()->setMargin(0);
+	//rope->m_cfg.kKHR = 1; // collision hardness with kinematic objects
+	//rope->m_cfg.kCHR = 1; // collision hardness with rigid body
+	//rope->m_cfg.kDF = 2;
+//	rope->m_cfg.drag =0.1;
 	//rope->m_cfg.kDF=1;
 	//rope->m_cfg.kSRHR_CL = 1;
 	//rope->m_cfg.kSR_SPLT_CL = 0;
 	//rope->m_cfg.collisions = btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
-	rope->m_cfg.collisions = btSoftBody::fCollision::RVSmask;
+	//rope->m_cfg.collisions = btSoftBody::fCollision::RVSmask;
 	//rope->generateClusters(64);
+	rope->m_cfg.collisions = btSoftBody::fCollision::CL_SELF;
+	rope->m_cfg.piterations = 10;
+	rope->randomizeConstraints();
+	rope->m_materials[0]->m_kLST = 0.5;
 
-	rope->m_materials[0]->m_kLST = 1;
-
-	rope->setTotalMass(5.f);
+	rope->setTotalMass(1.f);
 	g_dynamicsWorld->addSoftBody(rope);
 
 	//btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
@@ -140,16 +144,16 @@ btSoftBody* create_cloak(){
 			btVector3(+s/2, h, +s-56), r/2, r, 0, true);
 	psb->getCollisionShape()->setMargin(0.1);
 	psb->generateBendingConstraints(2);
-	psb->setTotalMass((btScalar)1.);
+	psb->setTotalMass((btScalar)1., true);
 	//psb->m_cfg.kKHR = 1; // collision hardness with kinematic objects
 	//psb->m_cfg.kCHR = 1; // collision hardness with rigid body
 	//psb->m_cfg.kDF = 2;
 	//psb->m_cfg.drag =0.01;
-	psb->m_cfg.kDF = 1;
+	psb->m_cfg.kDF = 0.99;
 	psb->m_cfg.kSRHR_CL = 1;
 	psb->m_cfg.kSR_SPLT_CL = 0;
 	psb->generateClusters(64);
-	psb->m_cfg.collisions = btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
+	psb->m_cfg.collisions = btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
 	g_dynamicsWorld->addSoftBody(psb);
 
 	//btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
