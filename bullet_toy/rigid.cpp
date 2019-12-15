@@ -77,12 +77,14 @@ GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
 GLfloat light_position[] = {10.0, 10.0, 1.0, 0.0};  /* Infinite light location. */
 
 btRigidBody *invisible_box;
-btRigidBody *jump_building;
+btRigidBody *jump_building, *human;
 btSoftBody *rope;
 btSoftBody *cloak;
 GraphPlayerPtr player;
 SkeletonPtr skel;
 ShapeInfoPtr ground;
+Eigen::Affine3d offset;
+bool enable = true;
 
 int cnt=0;
 void display(void)
@@ -110,7 +112,7 @@ void display(void)
 bool rope_anchor=false;
 void nextTimestep(int time){
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
-	float internalTimeStep = 1. / 240.f, deltaTime = 1. / 60.f;
+	float internalTimeStep = 1. / 600.f, deltaTime = 1. / 60.f;
 
 	player->nextTimestep(time);
 	// btTransform trans = invisible_box->getWorldTransform();
@@ -118,7 +120,14 @@ void nextTimestep(int time){
 	// skel->location = Eigen::Vector3d(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
 	//skel->root->jointTransform = Eigen::Quaterniond::Identity();
 	//skel->setTransform();
-	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
+	if(enable) g_dynamicsWorld->stepSimulation(deltaTime, 10, internalTimeStep);
+	if(player->status->isTerminate()){
+		btTransform trans = human->getWorldTransform();
+		Eigen::Affine3d t2; trans.getOpenGLMatrix(t2.data());
+		t2 = t2 * offset;
+		skel->location = t2.translation();
+		skel->root->jointTransform = Eigen::Quaterniond(t2.linear());
+	}
 
 		btTransform trans = skel->getCollisionObject("pelvis")->m_obj->getWorldTransform();
 
@@ -129,18 +138,18 @@ void nextTimestep(int time){
 
 	if(!rope_anchor){
 		rope->m_nodes[rope->m_nodes.size()-1].m_x = trans.getOrigin();
-		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, skel->getCollisionObject("pelvis")->m_obj);
+		rope->appendAnchor(rope->m_nodes.size() - 1, skel->getCollisionObject("pelvis")->m_obj);
 
 		cloak->translate(btVector3(0.0,0.0,0.5));
 		btRigidBody* lclavicle = skel->getCollisionObject("lclavicle")->m_obj;
 		trans = lclavicle->getWorldTransform();
 		//cloak->m_nodes[5*9].m_x = trans.getOrigin() + btVector3(0.5,1,-1);
-		cloak->appendDeformableAnchor(5*9, lclavicle);
+		cloak->appendAnchor(5*9, lclavicle);
 
 		btRigidBody* rclavicle = skel->getCollisionObject("rclavicle")->m_obj;
 		trans = rclavicle->getWorldTransform();
 		//cloak->m_nodes[5*9+4].m_x = trans.getOrigin() + btVector3(-0.5, 0.8,-1);
-		cloak->appendDeformableAnchor(5*9+4, rclavicle);
+		cloak->appendAnchor(5*9+4, rclavicle);
 
 		rope_anchor=true;
 	}
@@ -199,6 +208,7 @@ void make_rigid_body(SkeletonPtr skel){
 	printf("make rigid body called\n");
 
 	btVector3 f_v;
+	btTransform dx;
 	btCompoundShape* compoundShape = new btCompoundShape();
 
 	btScalar* masses = new btScalar[skel->nodeList.size()];
@@ -212,7 +222,8 @@ void make_rigid_body(SkeletonPtr skel){
 			compoundShape->addChildShape(trans, obj->getCollisionShape());
 
 			if(i==0){// pelvis
-			f_v = obj->getLinearVelocity();
+				f_v = obj->getLinearVelocity();
+				dx.setFromOpenGLMatrix(skel->nodeLocation[0].data());
 			}
 		}
 		masses[i] = 1; // how to get obj mass? // TODO: change to obj->m_mass;
@@ -232,23 +243,28 @@ void make_rigid_body(SkeletonPtr skel){
 		for(auto shape : shape_list){
 			auto obj = shape->m_obj;
 			g_dynamicsWorld->removeCollisionObject(obj);
-			delete obj;		
+			//delete obj;		
 		}
 	}
 
-	btRigidBody* body = create_rigid_body(mass, principal, compoundShape);
-	body->setLinearVelocity(f_v);
+	human = create_rigid_body(mass, principal, compoundShape);
+	human->setLinearVelocity(f_v);
+	dx = human->getWorldTransform().inverse() * dx;
+	dx.getOpenGLMatrix(offset.data());
 
 	//g_dynamicsWorld->addRigidBody(body);
 
 
 	//rope->m_nodes[rope->m_nodes.size()-1].m_x = trans.getOrigin();
-	rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
+	rope->m_anchors.pop_back();
+	rope->appendAnchor(rope->m_nodes.size() - 1, human);
 
-	cloak->m_cfg.kCHR = 0; // collision hardness with rigid body
-	cloak->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // collision between soft and rigid makes weird.
-	cloak->appendDeformableAnchor(5*9, body);
-	cloak->appendDeformableAnchor(5*9+4, body);
+	//cloak->m_cfg.kCHR = 1; // collision hardness with rigid body
+	//cloak->m_cfg.collisions = btSoftBody::fCollision::CL_SS | btSoftBody::fCollision::CL_RS; // collision between soft and rigid makes weird.
+	cloak->m_anchors.pop_back();
+	cloak->m_anchors.pop_back();
+	cloak->appendAnchor(5*9, human);
+	cloak->appendAnchor(5*9+4, human);
 }
 
 int main(int argc, char* argv[]){
