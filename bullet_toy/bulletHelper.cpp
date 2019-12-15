@@ -32,7 +32,7 @@ btRigidBody* create_rigid_body(float mass, const btTransform& trans, btCollision
 		btRigidBody* body = new btRigidBody(mass, 0, shape, localInertia);
 		body->setWorldTransform(trans);
 
-		body->setUserIndex(-1);
+		//body->setUserIndex(-1);
 		if(isKinematics){
 			body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
 			body->setActivationState( DISABLE_DEACTIVATION );

@@ -98,32 +98,8 @@ void display(void)
 	//Debug
 	g_dynamicsWorld->debugDrawWorld();
 
-
-	// btRigidBody* body = invisible_box;
-	// btTransform trans;
-
-	// trans = body->getWorldTransform();
-
-	// float trans_x = float(trans.getOrigin().getX());
-	// float trans_y = float(trans.getOrigin().getY());
-	// float trans_z = float(trans.getOrigin().getZ());
-
-	// //printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
-
-	// glMatrixMode(GL_MODELVIEW);
-	// glPushMatrix();
-	// double m[16];
-	// trans.getOpenGLMatrix(m);
-	// glMultMatrixd(m);
-
-	// draw_box(0.5,0.5,0.5);
-	// glPopMatrix();
-
-	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
-	{
-		btSoftBody* psb = (btSoftBody*)g_dynamicsWorld->getSoftBodyArray()[i];
-		draw_soft_body(psb);
-	}
+	// Draw cloak
+	draw_soft_body(cloak);
 	skel->display();
 	ground->display();
 	draw_rope(rope, 0.5, 20, 20);
@@ -286,51 +262,6 @@ int main(int argc, char* argv[]){
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
 
-	{
-		//create_ground();
-
-	}
-
-	{
-		//invisible_box = create_rigid_body(mass, startTransform, box);
-
-		// Deactivate collision for box.
-		//invisible_box->setCollisionFlags(invisible_box->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-
-		//rope->appendDeformableAnchor(rope->m_nodes.size() - 1, invisible_box);
-
-		//invisible_box->setLinearVelocity(btVector3(0, 2, 0));
-		//invisible_box->setAngularVelocity(btVector3(10, 0, 0));
-
-		// ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
-		// TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
-		// skel = SkeletonPtr(new Skeleton(doc));
-		// skel->turnOffKinematics();
-		// CollisionObjectPtr coll_obj = skel->getCollisionObject("pelvis");
-		// btRigidBody* body = coll_obj->m_obj;
-		
-		// skel->location = Eigen::Vector3d(5, 80.5, -3);
-		// skel->setTransform();
-
-		// btTransform trans = body->getWorldTransform();
-
-		// float trans_x = float(trans.getOrigin().getX());
-		// float trans_y = float(trans.getOrigin().getY());
-		// float trans_z = float(trans.getOrigin().getZ());
-
-		// rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
-
-
-		// printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
-
-
-
-		// MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
-		// player = GraphPlayerPtr(new GraphPlayer(skel, graph));
-
-		// skel->location = Eigen::Vector3d(5, 80.5, -3);
-		// skel->setTransform();
-	}
 	// Ground
 	{
 		ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
@@ -373,9 +304,6 @@ int main(int argc, char* argv[]){
 		cloak = create_cloak();
 	}
 
-//*
-	
-// */
 	glutMainLoop();
 
 	return 0;
