@@ -246,7 +246,7 @@ void make_rigid_body(SkeletonPtr skel){
 	rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
 
 	cloak->m_cfg.kCHR = 0; // collision hardness with rigid body
-	cloak->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_SS; // collision between soft and rigid makes weird.
+	cloak->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // collision between soft and rigid makes weird.
 	cloak->appendDeformableAnchor(5*9, body);
 	cloak->appendDeformableAnchor(5*9+4, body);
 }
