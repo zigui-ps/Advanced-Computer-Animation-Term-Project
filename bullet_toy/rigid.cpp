@@ -71,12 +71,15 @@ void  DebugDrawer::setDebugMode(int debugMode)
 	m_debugMode = debugMode;
 }
 
+
 DebugDrawer* debugDrawer = new DebugDrawer();
 GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
 GLfloat light_position[] = {10.0, 10.0, 1.0, 0.0};  /* Infinite light location. */
 
-btRigidBody *box2;
+btRigidBody *invisible_box;
+btRigidBody *jump_building;
 btSoftBody *rope;
+btSoftBody *cloak;
 GraphPlayerPtr player;
 SkeletonPtr skel;
 ShapeInfoPtr ground;
@@ -90,64 +93,57 @@ void display(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glMultMatrixf((float*)glm::value_ptr(get_view_mat()));
-	// gluLookAt(250.0, -70.0, 150.0,   /* eye is at () */
-	// 		0.0, 20.0, -95.0,      /* center is at (0,0,0) */
-	// 		0.0, 1.0, 0.);      /* up is in positive Y direction */
 
 
 	//Debug
 	g_dynamicsWorld->debugDrawWorld();
 
-
-	btRigidBody* body = box2;
-	btTransform trans;
-
-	trans = body->getWorldTransform();
-
-	float trans_x = float(trans.getOrigin().getX());
-	float trans_y = float(trans.getOrigin().getY());
-	float trans_z = float(trans.getOrigin().getZ());
-
-	//printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	double m[16];
-	trans.getOpenGLMatrix(m);
-	glMultMatrixd(m);
-
-	draw_box(5,5,5);
-	glPopMatrix();
-
-	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
-	{
-		btSoftBody* psb = (btSoftBody*)g_dynamicsWorld->getSoftBodyArray()[i];
-		draw_soft_body(psb);
-	}
+	// Draw cloak
+	draw_soft_body(cloak);
 	skel->display();
 	ground->display();
-	draw_rope(rope, 1, 20, 20);
-
-	for (int i = 0; i < g_dynamicsWorld->getSoftBodyArray().size(); i++)
-	{
-		btSoftBody* psb = (btSoftBody*)g_dynamicsWorld->getSoftBodyArray()[i];
-		draw_soft_body(psb);
-	}
+	draw_rope(rope, 0.5, 20, 20);
 
 	glutSwapBuffers();
 }
 
+bool rope_anchor=false;
 void nextTimestep(int time){
 	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 	float internalTimeStep = 1. / 240.f, deltaTime = 1. / 60.f;
 
-	btTransform t;
-	t.setIdentity();
-	t.setOrigin(btVector3(((float)rand()/RAND_MAX) * 20, 0, 0));
-	//box1->setTransform(t);
-
 	player->nextTimestep(time);
+	// btTransform trans = invisible_box->getWorldTransform();
+
+	// skel->location = Eigen::Vector3d(trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
+	//skel->root->jointTransform = Eigen::Quaterniond::Identity();
+	//skel->setTransform();
 	g_dynamicsWorld->stepSimulation(deltaTime, 4, internalTimeStep);
+
+		btTransform trans = skel->getCollisionObject("pelvis")->m_obj->getWorldTransform();
+
+		float trans_x = float(trans.getOrigin().getX());
+		float trans_y = float(trans.getOrigin().getY());
+		float trans_z = float(trans.getOrigin().getZ());
+		printf("world pos object root = %f,%f,%f\n", trans_x, trans_y, trans_z);
+
+	if(!rope_anchor){
+		rope->m_nodes[rope->m_nodes.size()-1].m_x = trans.getOrigin();
+		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, skel->getCollisionObject("pelvis")->m_obj);
+
+		cloak->translate(btVector3(0.0,0.0,0.5));
+		btRigidBody* lclavicle = skel->getCollisionObject("lclavicle")->m_obj;
+		trans = lclavicle->getWorldTransform();
+		//cloak->m_nodes[5*9].m_x = trans.getOrigin() + btVector3(0.5,1,-1);
+		cloak->appendDeformableAnchor(5*9, lclavicle);
+
+		btRigidBody* rclavicle = skel->getCollisionObject("rclavicle")->m_obj;
+		trans = rclavicle->getWorldTransform();
+		//cloak->m_nodes[5*9+4].m_x = trans.getOrigin() + btVector3(-0.5, 0.8,-1);
+		cloak->appendDeformableAnchor(5*9+4, rclavicle);
+
+		rope_anchor=true;
+	}
 
 	glutPostRedisplay();
 }
@@ -174,6 +170,10 @@ void init_gl(int argc, char* argv[]){
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
 
+	// Color
+	glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
+	glEnable(GL_COLOR_MATERIAL);
+
 	glEnable(GL_DEPTH_TEST);
 
 	glMatrixMode(GL_PROJECTION);
@@ -182,12 +182,12 @@ void init_gl(int argc, char* argv[]){
 	printf("Init GL\n");
 
 	printf("== How to Handle Camera ==========================\n");
-	printf(" - R: Reset to default condition.");
+	printf(" - R: Reset to default condition.\n");
 	printf(" - W: Make the camera go front.\n");
 	printf(" - A: Make the camera go left.\n");
 	printf(" - S: Make the camera go backward.\n");
 	printf(" - D: Make the camera go right.\n");
-	printf(" - Z: Make the camera go up.\n");
+	printf(" - Zcompound2: Make the camera go up.\n");
 	printf(" - X: Make the camera go down.\n");
 	printf(" - MOUSE RIGHT CLICK & DRAG: Rotate the camera.\n");
 	printf("==================================================\n");
@@ -197,6 +197,58 @@ void init_gl(int argc, char* argv[]){
 void make_rigid_body(SkeletonPtr skel){
 	// TODO
 	printf("make rigid body called\n");
+
+	btVector3 f_v;
+	btCompoundShape* compoundShape = new btCompoundShape();
+
+	btScalar* masses = new btScalar[skel->nodeList.size()];
+	for(int i = 0; i < skel->nodeList.size(); i++){
+		auto cur = skel->nodeList[i];
+		auto shape_list = cur->shapeList;
+		for(auto shape : shape_list){
+			auto obj = shape->m_obj;
+			btTransform trans = obj->getWorldTransform();
+			
+			compoundShape->addChildShape(trans, obj->getCollisionShape());
+
+			if(i==0){// pelvis
+			f_v = obj->getLinearVelocity();
+			}
+		}
+		masses[i] = 1; // how to get obj mass? // TODO: change to obj->m_mass;
+	}
+
+	btTransform principal;
+	principal.setIdentity();
+
+	btScalar mass(15.0f); // maybe sumup masses
+	
+
+
+	// Remove
+	for(int i = 0; i < skel->nodeList.size(); i++){
+		auto cur = skel->nodeList[i];
+		auto shape_list = cur->shapeList;
+		for(auto shape : shape_list){
+			auto obj = shape->m_obj;
+			g_dynamicsWorld->removeCollisionObject(obj);
+			delete obj;		
+		}
+	}
+
+	btRigidBody* body = create_rigid_body(mass, principal, compoundShape);
+	body->setLinearVelocity(f_v);
+
+	//g_dynamicsWorld->addRigidBody(body);
+
+
+	//rope->m_nodes[rope->m_nodes.size()-1].m_x = trans.getOrigin();
+	rope->appendDeformableAnchor(rope->m_nodes.size() - 1, body);
+
+	cloak->m_cfg.kCHR = 0; // collision hardness with rigid body
+	cloak->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // collision between soft and rigid makes weird.
+	cloak->appendDeformableAnchor(5*9, body);
+	cloak->appendDeformableAnchor(5*9+4, body);
 }
 
 int main(int argc, char* argv[]){
@@ -209,72 +261,49 @@ int main(int argc, char* argv[]){
 
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
-	// create a ground
-	btBoxShape* groundShape = new btBoxShape(btVector3(btScalar(500.), btScalar(50.), btScalar(500.)));
 
-	btTransform groundTransform;
-	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(0,-50, 0));
+	// Ground
 	{
-		btScalar mass(0.);
-		create_rigid_body(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
+		ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
+	}
+	// Jump building
+	{
+		// jump_building = create_jump_building();
+		// btTransform trans = jump_building->getWorldTransform();
+
+		// float trans_x = float(trans.getOrigin().getX());
+		// float trans_y = float(trans.getOrigin().getY());
+		// float trans_z = float(trans.getOrigin().getZ());
+//		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+	}
+	// Human
+	{
+		Eigen::Vector3d location = Eigen::Vector3d(0, 80, -65);
+		TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
+		skel = SkeletonPtr(new Skeleton(doc));
+		MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
+		player = GraphPlayerPtr(new GraphPlayer(skel, graph, location));
+	}
+	// Rope
+	{
+		CollisionObjectPtr root = skel->getCollisionObject("pelvis");
+		btTransform root_origin = root->m_obj->getWorldTransform();
+
+		float trans_x = float(root_origin.getOrigin().getX());
+		float trans_y = float(root_origin.getOrigin().getY());
+		float trans_z = float(root_origin.getOrigin().getZ());
+		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+		rope = create_rope(btVector3(0, 85,-60),btVector3(0,85,-55));
+
+		//rope->appendDeformableAnchor(rope->m_nodes.size() - 1, root->m_obj);
+
 	}
 
-	// {
-	// 	// btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
-
-	// 	// btTransform startTransform;
-	// 	// startTransform.setIdentity();
-
-	// 	// btScalar mass(5.f);
-
-	// 	// startTransform.setOrigin(btVector3(0,10,0));
-	// 	// box1 = createRigidBody(mass, startTransform, box, true);
-
-	// 	box1 = new CollisionObject();
-	// 	box1->createCollisionObject(0,10,0, 5,5,5);
-	// }
+	// Cloak
 	{
-		rope = btSoftBodyHelpers::CreateRope(g_dynamicsWorld->getWorldInfo(),btVector3(-500, 55, 50), btVector3(-400, 55, 50),10, 1);
-		rope->getCollisionShape()->setMargin(1);
-		rope->m_cfg.kKHR = 1; // collision hardness with kinematic objects
-		rope->m_cfg.kCHR = 1; // collision hardness with rigid body
-		rope->m_cfg.kDF = 2;
-		rope->m_cfg.collisions = btSoftBody::fCollision::SDF_RS | btSoftBody::fCollision::CL_RS; // | btSoftBody::fCollision::VF_SS ;
-
-		rope->m_materials[0]->m_kLST = 0;
-		
-		rope->setTotalMass(5.f);
-		g_dynamicsWorld->addSoftBody(rope);
-
-		btDeformableMassSpringForce* mass_spring = new btDeformableMassSpringForce(100, 1, true);
-		g_dynamicsWorld->addForce(rope, mass_spring);
-
-		btDeformableGravityForce* gravity_force =  new btDeformableGravityForce(btVector3(0,-10, 0));
-		g_dynamicsWorld->addForce(rope, gravity_force);
-	
-		btBoxShape *box = new btBoxShape(btVector3(btScalar(5.), btScalar(5.), btScalar(5.)));
-
-		btTransform startTransform;
-		startTransform.setIdentity();
-
-		btScalar mass(10.0f);
-
-		startTransform.setOrigin(btVector3(-400,50,50));
-		box2 = create_rigid_body(mass, startTransform, box);
-		rope->appendDeformableAnchor(rope->m_nodes.size() - 1, box2);
-
-		box2->setLinearVelocity(btVector3(0, 20, 0));
-		box2->setAngularVelocity(btVector3(10, 0, 0));
+		cloak = create_cloak();
 	}
-//*
-	Eigen::Vector3d location = Eigen::Vector3d(0, 0, 0);
-	ground = ShapeInfoPtr(new GroundShape(100, 100, 1, 1));
-	TiXmlDocument doc; doc.LoadFile("../character/gen2.xml");
-	skel = SkeletonPtr(new Skeleton(doc));
-	MotionGraphPtr graph = MotionGraphPtr(new MotionGraph("../motion/MotionGraph.cfg"));
-	player = GraphPlayerPtr(new GraphPlayer(skel, graph, location));
-// */
+
 	glutMainLoop();
 
 	return 0;

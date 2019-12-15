@@ -16,6 +16,7 @@ class SkeletonNode;
 class Skeleton;
 using SkeletonNodePtr = std::shared_ptr<SkeletonNode>;
 using SkeletonPtr = std::shared_ptr<Skeleton>;
+using CollisionObjectPtr = std::shared_ptr<CollisionObject>;
 
 class SkeletonNode : public Drawable{
 public:
@@ -60,6 +61,8 @@ public:
 	void setTransform();
 	void inverseKinematics(const std::vector<IKConstraint> &constraint);
 	Eigen::MatrixXd getJacobian(const std::vector<IKConstraint> &constraint);
+	void turnOffKinematics();
+	CollisionObjectPtr getCollisionObject(std::string name);
 
 	void display();
 };

@@ -8,6 +8,8 @@
 #include <tinyxml.h>
 #include "Skeleton/Skeleton.h"
 
+double scale = 10.0;
+
 // SkeletonNode
 
 const double PI = acos(-1);
@@ -67,7 +69,7 @@ static Eigen::Affine3d getAffineTransform(TiXmlElement *body)
 	if(auto it = body->Attribute("rotate"))
 		affine.rotate(stringToAngleAxisd(it));
 	if(auto it = body->Attribute("translate"))
-		affine.translate(stringToVector3d(it));
+		affine.translate(stringToVector3d(it) * scale);
 	
 	return affine;
 }
@@ -85,12 +87,12 @@ static SkeletonNodePtr helper(TiXmlElement *body, Skeleton* skel)
 
 	for(TiXmlElement *child = body->FirstChildElement(); child != NULL; child = child->NextSiblingElement()){
 		if(child->ValueStr() == "Cuboid"){
-			Eigen::Vector3d info = stringToVector3d(child->Attribute("info"));
+			Eigen::Vector3d info = stringToVector3d(child->Attribute("info")) * scale;
 			Eigen::Affine3d affine = getAffineTransform(child);
 			double m_mass;
 			if(auto it = child->Attribute("mass")) m_mass = stringToDouble(it);
 			else{
-				m_mass = info[0] * info[1] * info[2] * 100;
+				m_mass = info[0] * info[1] * info[2] * 3000 / scale / scale / scale;
 			}
 			current->shapeList.push_back(ShapeInfoPtr((ShapeInfo*)new Cuboid(affine, info, m_mass)));
 		}
@@ -206,4 +208,22 @@ std::ostream& operator<<(std::ostream& os, const SkeletonPose& dt)
 	std::cout << "translate : " << dt.location << "\nrotation : ";
 	for(auto c : dt.joint) std::cout << c.w() << " " << c.vec() << "\n";
     return os;
+}
+
+void Skeleton::turnOffKinematics(){
+	for(int i = 0; i < nodeList.size(); i++){
+		auto cur = nodeList[i];
+		auto shape_list = cur->shapeList;
+		for(auto shape : shape_list){
+			auto obj = shape->m_obj;
+			obj->setCollisionFlags(obj->getCollisionFlags() & ~btCollisionObject::CF_KINEMATIC_OBJECT);
+
+		}
+	}
+}
+
+CollisionObjectPtr Skeleton::getCollisionObject(std::string name){
+	SkeletonNodePtr node = this->nodeName[name];
+	// Just return only one collisionobject
+	return node->shapeList[0];
 }

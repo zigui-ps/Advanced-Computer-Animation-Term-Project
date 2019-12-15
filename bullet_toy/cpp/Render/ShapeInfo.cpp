@@ -118,14 +118,15 @@ void Cylinder::display()
 
 GroundShape::GroundShape(int n, int m, double x, double z):
 	ShapeInfo(Eigen::Affine3d::Identity(), 0), n(n), m(m), x(x), z(z){
-    btBoxShape *box = new btBoxShape(btVector3(n*x*2, 10, m*z*2));
-    btTransform m_trans; m_trans.setOrigin(btVector3(0, -5, 0));
-    m_obj = create_rigid_body(m_mass, m_trans, box, true);
+    // btBoxShape *box = new btBoxShape(btVector3(n*x*2, 10, m*z*2));
+    // btTransform m_trans; m_trans.setOrigin(btVector3(0, -5, 0));
+    // m_obj = create_rigid_body(0.0, m_trans, box, false);
+	//m_obj = create_ground(n*x, 5, m*z);
 }
 
 void GroundShape::display()
 {
-	glColor3d(0.0, 0.0, 0.0);
+	glColor3d(0.5, 0.5, 0.5);
 	glBegin(GL_LINES);
 	for(int i = -n; i <= n; i++){
 		if(i == 0){

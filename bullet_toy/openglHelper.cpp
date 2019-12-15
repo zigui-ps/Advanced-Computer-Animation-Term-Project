@@ -10,7 +10,7 @@ extern GraphPlayerPtr player;
 
 void init_cameras(){
 //    Camera* camera_1 = new Camera(glm::vec3(-700, 30, 100));
-    Camera* camera_1 = new Camera(glm::vec3(-5, 0, 0));
+    Camera* camera_1 = new Camera(glm::vec3(-50, 85, -50));
 
     camera_list.push_back(camera_1);
 }
@@ -84,7 +84,7 @@ void keyboard_callback(unsigned char key, int x, int y){
 void draw_box(float width, float height, float depth){
 
 	glBegin(GL_TRIANGLES);
-	glColor3f(0,0,0);
+	glColor3f(1,0,0);
 
 	// Top
 	glNormal3f(0,1,0);
