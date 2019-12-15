@@ -4,6 +4,10 @@
 #include <GL/freeglut.h>
 #include <stdio.h> //printf debugging
 #include <tinyxml2.h>
+#include <GLFW/glfw3.h>
+
+#include <shader.h>
+#include <model.h>
 
 #include "btBulletDynamicsCommon.h"
 
@@ -89,14 +93,6 @@ bool enable = true;
 int cnt=0;
 void display(void)
 {
-	glClearColor(0.9, 0.9, 0.9, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glMultMatrixf((float*)glm::value_ptr(get_view_mat()));
-
-
 	//Debug
 	g_dynamicsWorld->debugDrawWorld();
 
@@ -104,14 +100,15 @@ void display(void)
 	draw_soft_body(cloak);
 	skel->display();
 	ground->display();
-	//draw_rope(rope, 0.5, 20, 20);
+	if(rope) draw_rope(rope, 0.5, 20, 20);
+	else printf("??\n");
 
-	glutSwapBuffers();
+//	glutSwapBuffers();
 }
 
 bool rope_anchor=false;
 void nextTimestep(int time){
-	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
+//	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 	float internalTimeStep = 1. / 6000.f, deltaTime = 1. / 600.f;
 
 	static int cnt = 0;
@@ -173,53 +170,165 @@ void nextTimestep(int time){
 		rope_anchor=true;
 	}
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 
+const unsigned int SCR_WIDTH = 2400;
+const unsigned int SCR_HEIGHT = 1800;
+
+GLFWwindow* window;
+Camera camera(glm::vec3(-50, 85, -50));
+bool firstMouse = true;
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and
+    // height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
+}
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = -xpos + lastX;
+    float yoffset = -ypos + lastY;
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(yoffset);
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+	player->keyboard(key, 0, 0);
+    switch(key){
+        case 'w':
+        case 'W':
+            camera.ProcessKeyboard(FORWARD, 0.01);
+            break;
+        case 'a':
+        case 'A':
+						camera.ProcessKeyboard(LEFT, 0.01);
+            break;
+        case 's':
+        case 'S':
+						camera.ProcessKeyboard(BACKWARD, 0.01);
+        break;
+        case 'd':
+        case 'D':
+						camera.ProcessKeyboard(RIGHT, 0.01);
+        break;
+        case 'z':
+        case 'Z':
+						camera.ProcessKeyboard(UP, 0.01);
+        break;
+        case 'x':
+        case 'X':
+						camera.ProcessKeyboard(DOWN, 0.01);
+        break;
+        case 'r':
+        case 'R':
+						camera.reset();
+        break;
+    }
+}
+
+
 void init_gl(int argc, char* argv[]){
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
-	glutInitWindowSize(1600, 900);
-	glutCreateWindow("Rigid");
+//	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
+    if (!glfwInit())
+        exit(EXIT_FAILURE);
+    
+		window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Superman", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
+    glfwMakeContextCurrent(window);
 
-	glutDisplayFunc(display);
+		GLenum res = glewInit();
+    
+		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+		glfwSetKeyCallback(window, key_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// Register callback functions
-	// ------------------------------------------------------------
-	glutMouseFunc(mouse_callback);
-	glutMotionFunc(mouse_drag_callback);
-	glutKeyboardFunc(keyboard_callback);
-	// ------------------------------------------------------------
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+		glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHTING);
+		glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
+		glEnable(GL_COLOR_MATERIAL);
+		glEnable(GL_DEPTH_TEST);
 
-	glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
+		/*
+			 glutInit(&argc, argv);
+			 glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
+			 glutInitWindowSize(1600, 900);
+			 glutCreateWindow("Rigid");
 
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_LIGHTING);
+			 glutDisplayFunc(display);
 
-	// Color
-	glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
-	glEnable(GL_COLOR_MATERIAL);
+		// Register callback functions
+		// ------------------------------------------------------------
+		glutMouseFunc(mouse_callback);
+		glutMotionFunc(mouse_drag_callback);
+		glutKeyboardFunc(keyboard_callback);
+		// ------------------------------------------------------------
 
-	glEnable(GL_DEPTH_TEST);
+		glutTimerFunc(1000.0 / 60.0, nextTimestep, 0);
 
-	glMatrixMode(GL_PROJECTION);
-	gluPerspective(40.0, 1.0, 1.0, 10000.0);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+		glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHTING);
 
-	printf("Init GL\n");
+		// Color
+		glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
+		glEnable(GL_COLOR_MATERIAL);
 
-	printf("== How to Handle Camera ==========================\n");
-	printf(" - R: Reset to default condition.\n");
-	printf(" - W: Make the camera go front.\n");
-	printf(" - A: Make the camera go left.\n");
-	printf(" - S: Make the camera go backward.\n");
-	printf(" - D: Make the camera go right.\n");
-	printf(" - Zcompound2: Make the camera go up.\n");
-	printf(" - X: Make the camera go down.\n");
-	printf(" - MOUSE RIGHT CLICK & DRAG: Rotate the camera.\n");
-	printf("==================================================\n");
+		glEnable(GL_DEPTH_TEST);
 
+		glMatrixMode(GL_PROJECTION);
+		gluPerspective(40.0, 1.0, 1.0, 10000.0);
+
+		printf("Init GL\n");
+
+		printf("== How to Handle Camera ==========================\n");
+		printf(" - R: Reset to default condition.\n");
+		printf(" - W: Make the camera go front.\n");
+		printf(" - A: Make the camera go left.\n");
+		printf(" - S: Make the camera go backward.\n");
+		printf(" - D: Make the camera go right.\n");
+		printf(" - Zcompound2: Make the camera go up.\n");
+		printf(" - X: Make the camera go down.\n");
+		printf(" - MOUSE RIGHT CLICK & DRAG: Rotate the camera.\n");
+		printf("==================================================\n");
+		// */
 }
 
 void make_rigid_body(SkeletonPtr skel){
@@ -237,7 +346,7 @@ void make_rigid_body(SkeletonPtr skel){
 		for(auto shape : shape_list){
 			auto obj = shape->m_obj;
 			btTransform trans = obj->getWorldTransform();
-			
+
 			compoundShape->addChildShape(trans, obj->getCollisionShape());
 
 			if(i==0){// pelvis
@@ -252,7 +361,7 @@ void make_rigid_body(SkeletonPtr skel){
 	principal.setIdentity();
 
 	btScalar mass(100.0f); // maybe sumup masses
-	
+
 
 
 	// Remove
@@ -289,10 +398,7 @@ void make_rigid_body(SkeletonPtr skel){
 int main(int argc, char* argv[]){
 	init_gl(argc, argv);
 
-	init_cameras();
-
 	init_bullet_world();
-
 
 	debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 	g_dynamicsWorld->setDebugDrawer(debugDrawer);
@@ -309,7 +415,7 @@ int main(int argc, char* argv[]){
 		// float trans_x = float(trans.getOrigin().getX());
 		// float trans_y = float(trans.getOrigin().getY());
 		// float trans_z = float(trans.getOrigin().getZ());
-//		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
+		//		printf("world pos object %d = %f,%f,%f\n", 0, trans_x, trans_y, trans_z);
 	}
 	// Human
 	{
@@ -339,7 +445,67 @@ int main(int argc, char* argv[]){
 		cloak = create_cloak();
 	}
 
-	glutMainLoop();
+	Shader ourShader("../modelloader/vs.vs", "../modelloader/fs.fs");
+//	Shader ourShader("../modelloader/vertexshader.txt", "../modelloader/fragshader.txt");
+	//*
+	Model ourModel("../obj/unit_sphere/unit_sphere.obj");
+	// Model ourModel1("../obj/mill/wood_tower1.obj");
+	Model ourModel1("../obj/ab/Hot_air_balloon_v1_L2.123c69a97f0e-9977-45dd-9570-457189ce2941/11809_Hot_air_balloon_l2.obj");
+	Model ourModel2("../obj/unit_sphere/unit_sphere.obj");
+	Model ourModel3("../obj/crane/Amaryllis City.obj");
+// */
+	while (!glfwWindowShouldClose(window))
+	{
+		glfwMakeContextCurrent(window);
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		glViewport(0, 0, width, height);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		ourShader.use();
+		{
+			// view/projection transformations
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+			glm::mat4 view = camera.GetViewMatrix();
+			ourShader.setMat4("projection", projection);
+			ourShader.setMat4("view", view);
+		}
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(40.0, 1.0, .1, 1e5);
+		glm::mat4 view = camera.GetViewMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glMultMatrixf((float*)glm::value_ptr(view));
+		{
+        // render the loaded model
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.0f, 0.0f, 0.0f));	// it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", model);
+        ourModel.Draw(ourShader);
+        
+        glm::mat4 tower = glm::mat4(1.0f);
+        tower = glm::rotate(tower, float(-3.141592/2.0),glm::vec3(1.0f, 0.0f, 0.0f));
+        tower = glm::scale(tower, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", tower);
+        ourModel1.Draw(ourShader);
+        glm::mat4 crane = glm::mat4(1.0f);
+        crane = glm::scale(crane, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", crane);
+        ourModel3.Draw(ourShader);
+		}
+
+		glUseProgram(0);
+		display();
+		nextTimestep(0);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+		// */
+	}
+	//glutMainLoop();
 
 	return 0;
 }
