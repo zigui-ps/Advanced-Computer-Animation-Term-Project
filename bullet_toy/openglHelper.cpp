@@ -44,44 +44,6 @@ void mouse_drag_callback(int x, int y){
     mouse_pos_y = y;
 }
 
-extern bool enable;
-void keyboard_callback(unsigned char key, int x, int y){
-	player->keyboard(key, x, y);
-    switch(key){
-				case '-':
-						enable = !enable;
-        case 'w':
-        case 'W':
-            camera_list[cur_camera_idx]->ProcessKeyboard(FORWARD, 0.01);
-            break;
-        case 'a':
-        case 'A':
-            camera_list[cur_camera_idx]->ProcessKeyboard(LEFT, 0.01);
-            break;
-        case 's':
-        case 'S':
-            camera_list[cur_camera_idx]->ProcessKeyboard(BACKWARD, 0.01);
-        break;
-        case 'd':
-        case 'D':
-            camera_list[cur_camera_idx]->ProcessKeyboard(RIGHT, 0.01);
-        break;
-        case 'z':
-        case 'Z':
-            camera_list[cur_camera_idx]->ProcessKeyboard(UP, 0.01);
-        break;
-        case 'x':
-        case 'X':
-            camera_list[cur_camera_idx]->ProcessKeyboard(DOWN, 0.01);
-        break;
-        case 'r':
-        case 'R':
-            camera_list[cur_camera_idx]->reset();
-        break;
-    }
-    glutPostRedisplay();
-}
-
 
 void draw_box(float width, float height, float depth){
 
