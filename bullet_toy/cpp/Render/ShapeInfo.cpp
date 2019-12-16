@@ -126,37 +126,38 @@ GroundShape::GroundShape(int n, int m, double x, double z):
 
 void GroundShape::display()
 {
+	double h = -20000;
 	glColor3d(0.5, 0.5, 0.5);
 	glBegin(GL_LINES);
 	for(int i = -n; i <= n; i++){
 		if(i == 0){
-			glVertex3d(i*x, 0, -m*z);
-			glVertex3d(i*x, 0, -z);
-			glVertex3d(i*x, 0, z);
-			glVertex3d(i*x, 0, m*z);
+			glVertex3d(i*x, h, -m*z);
+			glVertex3d(i*x, h, -z);
+			glVertex3d(i*x, h, z);
+			glVertex3d(i*x, h, m*z);
 		}else{
-			glVertex3d(i*x, 0, -m*z);
-			glVertex3d(i*x, 0, m*z);
+			glVertex3d(i*x, h, -m*z);
+			glVertex3d(i*x, h, m*z);
 		}
 	}
 	for(int j = -m; j <= m; j++){
 		if(j == 0){
-			glVertex3d(-n*x, 0, j*z);
-			glVertex3d(-x, 0, j*z);
-			glVertex3d(x, 0, j*z);
-			glVertex3d(n*x, 0, j*z);
+			glVertex3d(-n*x, h, j*z);
+			glVertex3d(-x, h, j*z);
+			glVertex3d(x, h, j*z);
+			glVertex3d(n*x, h, j*z);
 		}else{
-			glVertex3d(-n*x, 0, j*z);
-			glVertex3d(n*x, 0, j*z);
+			glVertex3d(-n*x, h, j*z);
+			glVertex3d(n*x, h, j*z);
 		}
 	}
 	glEnd();
 	glBegin(GL_POLYGON);
 	glNormal3d(0, 1, 0);
-	glVertex3d(-n*x, 0, -m*z);
-	glVertex3d(-n*x, 0, m*z);
-	glVertex3d(n*x, 0, m*z);
-	glVertex3d(n*x, 0, -m*z);
+	glVertex3d(-n*x, h, -m*z);
+	glVertex3d(-n*x, h, m*z);
+	glVertex3d(n*x, h, m*z);
+	glVertex3d(n*x, h, -m*z);
 	glEnd();
 }
 

@@ -1,5 +1,6 @@
 #include "bulletHelper.h"
 #include "openglHelper.h"
+#include "Skeleton/Skeleton.h"
 #include <map>
 #include <vector>
 
@@ -173,15 +174,20 @@ void get_spline(btVector3 p0, btVector3 p1, btVector3 p2, btVector3 p3, std::vec
 	}
 }
 
-void draw_rope(btSoftBody* psb, double R, int c1, int c2){
+void draw_rope(btSoftBody* psb, double R, int c1, int c2, SkeletonPtr skel){
 	const double PI = acos(-1);
 	int n = psb->m_nodes.size();
 	std::vector<btVector3> points;
+	btVector3 l = btVector3(skel->location[0], skel->location[1], skel->location[2]);
 	for(int i = 0; i+1 < psb->m_nodes.size(); i++){
-		btVector3 p0 = psb->m_nodes[i].m_x, p1 = psb->m_nodes[i+1].m_x;
+		btVector3 p0 = psb->m_nodes[i].m_x, p1;
+		if(i+1 < psb->m_nodes.size()) p1 = psb->m_nodes[i+1].m_x;
+		else p1 = l;
 		btVector3 t0, t1;
-		t0 = i == 0 ? (p1 - p0) : (p1 - psb->m_nodes[i-1].m_x) * 0.5;
-		t1 = i+2 == psb->m_nodes.size() ? (p1 - p0) : (psb->m_nodes[i+2].m_x - p0) * 0.5;
+		t0 = i == 0 ? (p1 - p0) * 0.5 : (p1 - psb->m_nodes[i-1].m_x) * 0.5;
+		if(i+2 < psb->m_nodes.size()) t1 = (psb->m_nodes[i+2].m_x - p0) * 0.5;
+		else if(i+2 == psb->m_nodes.size()) t1 = (l - p0) * 0.5;
+		else t1 = (p1 - p0) * 0.5;
 		get_spline(p0, p0 + t0/3, p1 - t1/3, p1, points, c1);
 		points.pop_back();
 	}

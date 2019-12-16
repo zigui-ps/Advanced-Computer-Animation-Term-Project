@@ -100,7 +100,7 @@ void display(void)
 	draw_soft_body(cloak);
 	skel->display();
 	ground->display();
-	if(rope) draw_rope(rope, 0.5, 20, 20);
+	if(rope) draw_rope(rope, 0.5, 20, 20, skel);
 	else printf("??\n");
 
 //	glutSwapBuffers();
@@ -376,7 +376,7 @@ void make_rigid_body(SkeletonPtr skel){
 	}
 
 	human = create_rigid_body(mass, principal, compoundShape);
-	human->setLinearVelocity(f_v);
+	human->setLinearVelocity(rope->m_nodes[19].m_v);
 	dx = human->getWorldTransform().inverse() * dx;
 	dx.getOpenGLMatrix(offset.data());
 
@@ -466,19 +466,14 @@ int main(int argc, char* argv[]){
 		ourShader.use();
 		{
 			// view/projection transformations
-			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+			glm::mat4 projection =glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
 			glm::mat4 view = camera.GetViewMatrix();
 			ourShader.setMat4("projection", projection);
 			ourShader.setMat4("view", view);
 		}
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspective(40.0, 1.0, .1, 1e5);
-		glm::mat4 view = camera.GetViewMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glMultMatrixf((float*)glm::value_ptr(view));
+		// glMatrixMode(GL_MODELVIEW);
+		// glLoadIdentity();
+		//glMultMatrixf((float*)glm::value_ptr(view));
 		{
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
@@ -487,15 +482,28 @@ int main(int argc, char* argv[]){
         ourModel.Draw(ourShader);
         
         glm::mat4 tower = glm::mat4(1.0f);
+						tower = glm::translate(tower, glm::vec3(0,0,-40));
+
         tower = glm::rotate(tower, float(-3.141592/2.0),glm::vec3(1.0f, 0.0f, 0.0f));
+
         tower = glm::scale(tower, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", tower);
         ourModel1.Draw(ourShader);
         glm::mat4 crane = glm::mat4(1.0f);
+		crane = glm::translate(crane, glm::vec3(0,-100,0));
         crane = glm::scale(crane, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", crane);
         ourModel3.Draw(ourShader);
 		}
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glMultMatrixf((float*)glm::value_ptr(view));
+
 
 		glUseProgram(0);
 		display();

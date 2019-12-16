@@ -8,6 +8,10 @@
 #include "BulletSoftBody/btDeformableBodySolver.h"
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 #include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
+#include<memory>
+
+class Skeleton;
+using SkeletonPtr = std::shared_ptr<Skeleton>;
 
 extern btSoftRigidDynamicsWorld* g_dynamicsWorld;
 
@@ -21,6 +25,6 @@ btSoftBody* create_rope(btVector3 from,btVector3 to);
 btSoftBody* create_cloak();
 
 void draw_soft_body(btSoftBody* psb);
-void draw_rope(btSoftBody* psb, double R, int c1, int c2);
+void draw_rope(btSoftBody* psb, double R, int c1, int c2, SkeletonPtr skel);
 
 #endif //__BULLET_HELPER_H__
